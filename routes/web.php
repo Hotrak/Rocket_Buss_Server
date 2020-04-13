@@ -25,7 +25,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function (){
 //    $schedule = new Schedule();
 //    dd($schedule->scheduleShortWithCountPlaces(345,'2020-04-12'));
-    phpinfo();
+//    phpinfo();
     return "123";
 });
 //Route::get('/', 'ScheduleController@store');
