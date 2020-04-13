@@ -26,7 +26,7 @@ Route::get('/', function (){
 //    $schedule = new Schedule();
 //    dd($schedule->scheduleShortWithCountPlaces(345,'2020-04-12'));
     phpinfo();
-    return "1";
+    return "123";
 });
 //Route::get('/', 'ScheduleController@store');
 Route::get('/33', function (){
