@@ -23,10 +23,23 @@ use Illuminate\Support\Facades\Route;
 //$data = date("N",strtotime('2020-03-30'));
 //Route::get('/{time}', 'TownConnectionController@roundTime');
 Route::get('/', function (){
-//    $schedule = new Schedule();
-//    dd($schedule->scheduleShortWithCountPlaces(345,'2020-04-12'));
-//    phpinfo();
-    return "1234";
+//    $today = now();
+    $today_dt = new DateTime();
+    $expire_dt = new DateTime("2020-04-17");
+        $time1 = strtotime($today_dt->format("H:i"));
+        $time2 = strtotime("12:30:00");
+
+//        if($time1 < $time2)
+//            dd(1);
+//        else
+//            dd(0);
+
+        if($today_dt->format("Y-m-d") == $expire_dt->format("Y-m-d")) {
+            dd(1);
+        }
+            dd(0);
+
+//    if ($expire_dt < $today_dt)
 });
 //Route::get('/', 'ScheduleController@store');
 Route::get('/33', function (){

@@ -127,8 +127,6 @@ class ScheduleController extends Controller
         $newSchedule->car;
 
         return $newSchedule;
-
-
     }
 
     public function orders($scheduleId){

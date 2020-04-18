@@ -2,12 +2,24 @@
 
 namespace App;
 
+use DateTime;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
 class Schedule extends Model
 {
     public function scheduleShort($townConnectionId,$date){
+
+        $today_dt = new DateTime();
+        $expire_dt = new DateTime($date);
+
+        $time = "00:00:00";
+        if($today_dt->format("Y-m-d") == $expire_dt->format("Y-m-d")) {
+//            $time = $today_dt->format("H:i").":00";
+            $time = "07:00:00";
+        }
+
+
         $schedule = DB::table('schedules')
             ->join('schedule_routes', 'schedule_routes.schedule_id', '=', 'schedules.id')
             ->join('routes', 'routes.id', '=', 'schedule_routes.route_id')
@@ -22,6 +34,7 @@ class Schedule extends Model
                 'town_connections.conn_group'
             )
             ->where('town_connections.id','=',$townConnectionId)
+            ->where('routes.time','>',$time)
             ->whereDate('schedules.date_start',$date)
             ->groupBy('schedule_routes.id',
             'schedule_id',

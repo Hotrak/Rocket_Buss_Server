@@ -47,6 +47,8 @@ class TownController extends Controller
             $point->town_id = $town->id;
             $point->is_transit = $item['isPointTrans'];
             $point->coords = json_encode($item['coords']);
+            $point->x = $item['coords'][0];
+            $point->y = $item['coords'][1];
             $point->save();
         }
         return $town;

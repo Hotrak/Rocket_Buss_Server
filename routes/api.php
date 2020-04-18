@@ -60,6 +60,7 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/orders/{userId}','OrderController@ordersByUserId');
     Route::post('/orders','OrderController@store');
     Route::put('/orders/{id}/status','OrderController@updateStatus');
+    Route::get('/orders/show/{id}','OrderController@show');
     Route::delete('/orders/{id}','OrderController@destroy');
 
     Route::get('/reserves/cars','ReserveController@reservesCars');
