@@ -9,6 +9,7 @@ use App\ReserveCar;
 use App\ReserveDriver;
 use App\Route;
 use App\Schedule;
+use App\ScheduleCreateInfo;
 use App\ScheduleRoute;
 use App\TownConnection;
 use Illuminate\Http\Request;
@@ -33,58 +34,161 @@ class ScheduleController extends Controller
         return $schedule->scheduleShortWithCountPlaces($request->town_connection_id,$request->date);
     }
 
+    public function singleRoute(Request $request){
+        $schedule = new Schedule();
+        return $schedule->singleRouteWithCountPlaces($request->town_connection_id,$request->date,$request->route_id);
+    }
+
 
     public function store(Request $request){
-        $this->autoStore('2020-04-11',1);
-        $this->autoStore('2020-04-12',1);
+        $this->autoStore('2020-04-25',1);
+//        $this->autoStore('2020-04-25',1);
+//        $this->autoStore('2020-04-22',1);
     }
+
     public function autoStore($date,$conn_group_id){
 
         $dayOfWeek = date("N",strtotime($date));
+
+        $yesterday = date('Y-m-d',strtotime($date." - 1 day"));
+        $yesterdayDayOfWeek = date("N",strtotime($yesterday));
+
+        $scheduleCreateInfo = ScheduleCreateInfo::whereDate('schedule_date','=',$date)->first();
+        $counterCars = 0;
+        $counterDrivers = 0;
+
+        $unWorkedDrivers = [];
+
+        $isTodayScheduleCreateInfo = false;
+
+        $currentScheduleCreateInfo = null;
+        if(isset($scheduleCreateInfo)){
+            $currentScheduleCreateInfo = $scheduleCreateInfo;
+            $isTodayScheduleCreateInfo = true;
+
+        } else {
+            $scheduleCreateInfo = ScheduleCreateInfo::whereDate('schedule_date','=',$yesterday)->first();
+            if(isset($scheduleCreateInfo)){
+                $currentScheduleCreateInfo = $scheduleCreateInfo;
+            }
+        }
+        if(isset($currentScheduleCreateInfo)){
+            $workedDrivers = unserialize($currentScheduleCreateInfo->schedule_drivers);
+            $unWorkedDrivers = unserialize($currentScheduleCreateInfo->schedule_holidays_drivers);
+
+            $countWorkedDrivers = count($workedDrivers);
+            if($countWorkedDrivers!= 0)
+                $counterDrivers = $workedDrivers[$countWorkedDrivers-1]+1;
+
+            $counterCars = 0;
+        }
+
+
         $reserveCount = 5;
 
         $drivers = Driver::all();
         $cars = Car::all();
-//        $routes = Route::all()->filter(function ($item) use (&$conn_group_id) {
-//                return $item->conn_group_id == $conn_group_id || $item->conn_group_id == $conn_group_id+1;
-//            })
-//            ->join('')
-//            ->sortBy('route_group');
+
 
         $routes =  DB::table('routes')
-            ->select('routes.time','routes.id','routes.route_group')
+            ->select('routes.time','routes.id','routes.route_group','routes.route_days_group')
             ->join('route_days','routes.route_days_group','=','route_days.route_days_group')
             ->where('route_days.weekday','=', $dayOfWeek)
             ->whereBetween('routes.conn_group_id', [$conn_group_id, $conn_group_id+1])
-            ->groupBy('routes.time','routes.id','routes.route_group')
+            ->orderBy('routes.route_group')
+            ->groupBy('routes.time','routes.id','routes.route_group','routes.route_days_group')
             ->get();
+//        dd($routes);
+
+        $workedDrivers = [];
+        $newUnWorkedDrivers =[];
+        if($isTodayScheduleCreateInfo)
+            $newUnWorkedDrivers =$unWorkedDrivers;
 
 
-        $counter = 0;
-        $schedule = new Schedule();;
+
+        $currentDriver = null;
+        $unWorkerCount = 0;
         $count = 0;
         $temp = null;
         foreach ($routes as $route){
 
             if (!isset($temp)||$temp->route_group !== $route->route_group){
+
+                $isFind = false;
+                while (!$isFind){
+
+                    if($unWorkerCount < count($unWorkedDrivers) && !$isTodayScheduleCreateInfo){
+                        $currentDriver =  $unWorkedDrivers[$unWorkerCount];
+                        $newUnWorkedDrivers[] =  $currentDriver;
+                        $unWorkerCount++;
+                        $isFind = true;
+                    }
+                    else if($counterDrivers < count($drivers)){
+
+                        if($drivers[$counterDrivers]->week_end != $dayOfWeek ){
+                            $workedDrivers[] = $drivers[$counterDrivers]->id;
+                            $currentDriver = $drivers[$counterDrivers]->id;
+                            $isFind = true;
+                        }else{
+                            $newUnWorkedDrivers[] = $drivers[$counterDrivers]->id;
+                            $counterDrivers++;
+                        }
+                    }
+                    else
+                        $counterDrivers = 0;
+                }
+
+
                 $schedule = new Schedule();
-                $schedule->car_id = $cars[$counter]->id;
-                $schedule->driver_id = $drivers[$counter]->id;
+                $schedule->car_id = $cars[$counterCars]->id;
+                $schedule->driver_id = $currentDriver;
                 $schedule->route_id = 1;
                 $schedule->date_start = $date;
                 $schedule->save();
-                $counter = rand(0,4);
+
+
+                if($counterCars+1 < count($cars)) $counterCars++;
+                else $counterCars = 0;
+
+                $counterDrivers++;
+
             }
 
-            $scheduleRoute = new ScheduleRoute();
-            $scheduleRoute->schedule_id = $schedule->id;
-            $scheduleRoute->route_id = $route->id;
-            $scheduleRoute->save();
-            $count++;
-            $temp = $route;
-        }
+            $newScheduleRoute = new ScheduleRoute();
+            $newScheduleRoute->schedule_id = $schedule->id;
+            $newScheduleRoute->route_id = $route->id;
+            $newScheduleRoute->save();
 
-        for($i = 0;$i<$reserveCount;$i++){
+
+            $temp = $route;
+            $count++;
+        }
+//        $array = [];
+//        dd(serialize($workedDrivers),unserialize(serialize($array)));
+//        dd($workedDrivers,$unWorkedDrivers,serialize($workedDrivers),unserialize(serialize($workedDrivers)));
+
+        if($isTodayScheduleCreateInfo)
+            $scheduleCreateInfo = $currentScheduleCreateInfo;
+        else
+            $scheduleCreateInfo = new ScheduleCreateInfo;
+
+        $scheduleCreateInfo->schedule_date = $date;
+        $scheduleCreateInfo->schedule_drivers = serialize($workedDrivers);
+        $scheduleCreateInfo->schedule_holidays_drivers = serialize(array_unique($newUnWorkedDrivers));
+        $scheduleCreateInfo->save();
+
+
+
+
+        return 123;
+
+    }
+
+    private function createReservation($count, $date){
+
+
+        for($i = 0;$i<$count;$i++){
             $reserveCar = new ReserveCar;
             $reserveCar->reserve_date = $date;
             $reserveCar->car_id = rand(0,4);
@@ -97,7 +201,30 @@ class ScheduleController extends Controller
         }
 
         return 123;
+    }
 
+    public function getDriversInterval($date){
+        $result = DB::table('schedules')
+            ->where('date_start','=',$date)
+            ->select(
+                DB::raw('MIN(schedules.driver_id) as min_id'),
+                DB::raw('MAX(schedules.driver_id) as max_id')
+            )
+            ->first();
+
+        if(!isset($result->max_id))
+            return null;
+        return $result;
+    }
+
+    public function getDriversByInterval($interval,$weekEnd){
+        $result = DB::table('drivers')
+            ->whereBetween('drivers.id',$interval->min_id,$interval->max_id)
+            ->where('drivers.week_end','=',$weekEnd)
+            ->select(
+               "drivers.id"
+            )
+            ->get();
     }
 
     public function addDriver($scheduleId){

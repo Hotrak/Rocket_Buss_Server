@@ -22,6 +22,13 @@ class UserController extends Controller
         $user->roles;
         return json_encode($user);
     }
+
+    public function driver(){
+        $user = auth()->user();
+        $user->roles;
+        $user->driver;
+        return json_encode($user);
+    }
     public function login(){
         if(!auth()->attempt(request(['phone','password'])))
         {

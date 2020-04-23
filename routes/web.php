@@ -18,40 +18,27 @@ use App\Town;
 use App\TownConnection;
 use App\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Route;
 
 //$data = date("N",strtotime('2020-03-30'));
 //Route::get('/{time}', 'TownConnectionController@roundTime');
-Route::get('/', function (){
-//    $today = now();
-    $today_dt = new DateTime();
-    $expire_dt = new DateTime("2020-04-17");
-        $time1 = strtotime($today_dt->format("H:i"));
-        $time2 = strtotime("12:30:00");
-
-//        if($time1 < $time2)
-//            dd(1);
-//        else
-//            dd(0);
-
-        if($today_dt->format("Y-m-d") == $expire_dt->format("Y-m-d")) {
-            dd(1);
-        }
-            dd(0);
-
-//    if ($expire_dt < $today_dt)
+Route::get('/22222', function (){
+   $con =  new \App\Http\Controllers\DriverController();
+   $schedule = $con->schedule();
+    dd($schedule);
 });
 //Route::get('/', 'ScheduleController@store');
 Route::get('/33', function (){
 
-//    $user =  User::find(19);
-////    $user->notify(new \App\Notifications\TestNotificaton($user));
+    $user =  User::all()->first();
+//    $user->notify(new \App\Notifications\TestNotificaton($user));
 //
-//    $admins = User::all()->filter(function ($user){
-//        return $user->hasRole('admin');
-//    });
-//
-//    Notification::send($admins,new \App\Notifications\TestNotificaton($user));
+    $admins = User::all()->filter(function ($user){
+        return $user->hasRole('admin');
+    });
+
+    Notification::send($admins,new \App\Notifications\TestNotificaton($user));
 //
 //    dd($admins);
     //

@@ -27,9 +27,9 @@ Route::post('/login','UserController@login');
 Route::post('/register','UserController@store');
 
 
-
 Route::middleware('auth:api')->group(function () {
     Route::get('/user','UserController@index');
+    Route::get('/driver','UserController@driver');
     Route::post('/logout', 'UserController@logout')->name('logout');
     Route::put('/users/update/{id}', 'UserController@update');
 
@@ -37,6 +37,7 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/drivers','DriverController@store');
     Route::put('/drivers/{id}','DriverController@update');
     Route::delete('/drivers/{id}','DriverController@destroy');
+    Route::get('/drivers/schedule','DriverController@schedule');
 
     Route::get('/cars','CarController@index');
     Route::post('/cars','CarController@store');
@@ -61,6 +62,7 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/orders','OrderController@store');
     Route::put('/orders/{id}/status','OrderController@updateStatus');
     Route::get('/orders/show/{id}','OrderController@show');
+    Route::get('/orders/driver/{id}/{date}','OrderController@ordersByTownConnGroup');
     Route::delete('/orders/{id}','OrderController@destroy');
 
     Route::get('/reserves/cars','ReserveController@reservesCars');
@@ -68,11 +70,15 @@ Route::middleware('auth:api')->group(function () {
 
     Route::get('/schedule','ScheduleController@index');
     Route::get('/schedule_short','ScheduleController@shortSchedule');
+
     Route::post('/schedule','ScheduleController@store');
     Route::get('/schedule/{id}/orders','ScheduleController@orders');
     Route::post('/schedule/car','ScheduleController@addCar');
 
 });
+
+
+    Route::get('/single_route','ScheduleController@singleRoute');
 
 
 Route::get('/test',function (){

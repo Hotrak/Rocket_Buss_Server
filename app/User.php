@@ -60,4 +60,8 @@ class User extends Authenticatable
         $userHasRole->user_id = $this->id;
         $userHasRole->save();
     }
+
+    public function driver(){
+        return $this->hasOne('\App\Driver');
+    }
 }

@@ -6,6 +6,7 @@ use App\Driver;
 use App\Http\Requests\DriverRequest;
 use App\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
@@ -13,7 +14,7 @@ class DriverController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('role:admin');
+//        $this->middleware('role:admin');
     }
 
     public function index(){
@@ -50,6 +51,27 @@ class DriverController extends Controller
         $driver->user;
 
         return $driver;
+    }
+
+    public function schedule(){
+        $user = auth()->user();
+        $driverId = 10;
+//        $user->driver->id
+
+        $driverOrders = 'SELECT sch.id,
+        (SELECT  t.name FROM towns t WHERE t.id= tc.town1_id) AS town1_name,
+        (SELECT t2.name FROM towns t2 WHERE t2.id= tc.town2_id) AS town2_name,
+        sch.date_start,TIME_FORMAT(ro.time , "%H:%i") as time,tc.conn_group
+        FROM schedule_routes sr
+              JOIN schedules sch ON sch.id = sr.schedule_id
+              LEFT JOIN routes ro ON ro.id = sr.route_id
+              LEFT JOIN town_connections tc ON tc.id = ro.town_connection_id
+              where sch.driver_id=:driverId and tc.index_pos = 0 
+              order by sch.date_start';
+
+        $orders = DB::select($driverOrders,['driverId'=>$driverId]);
+        return $orders;
+
     }
 
     public function destroy($id){
