@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Order;
 use App\Town;
+use http\Client\Curl\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -28,8 +29,22 @@ class OrderController extends Controller
         return $orders;
     }
 
-
     public function store(Request $request){
+
+        if(isset($request->user_id)){
+
+            $price = DB::table('town_connections')
+                ->select('town_connections.price')
+                ->join('routes','routes.town_connection_id','=','town_connections.id')
+                ->join('schedule_routes','schedule_routes.route_id','=','routes.id')
+                ->where('schedule_routes.id','=',$request->schedule_route_id)//schedule_route_id
+                ->first()->price;
+
+            $user = \App\User::find($request->user_id);
+            $user->score = $user->score + ($price*10);
+            $user->save();
+        }
+
         $order = Order::create($request->all());
         return $order;
     }

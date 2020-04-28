@@ -5,6 +5,7 @@ namespace App;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 use Laravel\Passport\HasApiTokens;
 
 class User extends Authenticatable
@@ -63,5 +64,16 @@ class User extends Authenticatable
 
     public function driver(){
         return $this->hasOne('\App\Driver');
+    }
+
+    public function clients(){
+        $clients =  DB::table('users')
+            ->join('role_user','role_user.user_id','=','users.id')
+            ->join('roles','roles.id','=','role_user.role_id')
+            ->where('roles.name','=','client')
+            ->select('users.id','users.phone','users.score','users.lock')
+            ->get();
+
+        return $clients;
     }
 }

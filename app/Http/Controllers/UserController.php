@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\UserRequest;
 use App\Notifications\WelcomeMail;
+use App\ReserveCar;
+use App\Role;
+use App\Settings;
 use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,7 +23,10 @@ class UserController extends Controller
     public function index(){
         $user = auth()->user();
         $user->roles;
-        return json_encode($user);
+
+        $settings = Settings::all();
+
+        return response()->json(['user' => $user,'settings'=>$settings],200);
     }
 
     public function driver(){
@@ -49,6 +55,10 @@ class UserController extends Controller
 
         $authRequest['password']=Hash::make($authRequest->password);
         $user = User::create($authRequest->all(['name','phone','password']));
+
+//        $newUser = User::find($user->id);
+        $role = Role::find(3);
+        $user->setRole($role);
 
         $token = $user->createToken('Laravel Password Grant Client')->accessToken;
         $response = ['token' => $token];
@@ -102,6 +112,18 @@ class UserController extends Controller
         $response = ['token' => $token];
 
         return response($response, 200);
+    }
+
+    public function clients(){
+        $user = new User();
+        return $user->clients();
+    }
+
+    public function updateState(Request $request,$id){
+        $user = User::find($id);
+        $user->lock = $request->lock;
+        $user->save();
+        return $user;
     }
 
     public function logout(Request $request){

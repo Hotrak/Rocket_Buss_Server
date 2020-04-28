@@ -24,9 +24,13 @@ use Illuminate\Support\Facades\Route;
 //$data = date("N",strtotime('2020-03-30'));
 //Route::get('/{time}', 'TownConnectionController@roundTime');
 Route::get('/22222', function (){
-   $con =  new \App\Http\Controllers\DriverController();
-   $schedule = $con->schedule();
-    dd($schedule);
+    $price = DB::table('town_connections')
+        ->select('town_connections.price')
+        ->join('routes','routes.town_connection_id','=','town_connections.id')
+        ->join('schedule_routes','schedule_routes.route_id','=','routes.id')
+        ->where('schedule_routes.id','=',882)//schedule_route_id
+        ->first()->price;
+    dd($price);
 });
 //Route::get('/', 'ScheduleController@store');
 Route::get('/33', function (){

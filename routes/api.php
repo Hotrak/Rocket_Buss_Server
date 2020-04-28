@@ -29,6 +29,10 @@ Route::post('/register','UserController@store');
 
 Route::middleware('auth:api')->group(function () {
     Route::get('/user','UserController@index');
+    Route::put('/user/{id}/state','UserController@updateState');
+
+    Route::get('/clients','UserController@clients');
+
     Route::get('/driver','UserController@driver');
     Route::post('/logout', 'UserController@logout')->name('logout');
     Route::put('/users/update/{id}', 'UserController@update');
@@ -75,6 +79,8 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/schedule/{id}/orders','ScheduleController@orders');
     Route::post('/schedule/car','ScheduleController@addCar');
 
+    Route::get('/settings','SettingsController@index');
+    Route::put('/settings','SettingsController@update');
 });
 
 
