@@ -32,7 +32,18 @@ Route::get('/22222', function (){
         ->first()->price;
     dd($price);
 });
-//Route::get('/', 'ScheduleController@store');
+Route::get('/', 'ScheduleController@store');
+Route::get('/debug', function (){
+//    $schedule = new Schedule();
+//    $scheduleByScheduleRouteId = $schedule->singleRouteByScheduleRouteId(353);
+//    dd($scheduleByScheduleRouteId);
+
+    $reserveDrivers = new \App\ReserveDriver();
+    $reserveDriver = $reserveDrivers->getRandomByDate('2020-05-30');
+    dd($reserveDriver);
+
+    //    $scheduleByRouteId = $schedule->singleRoute();
+});
 Route::get('/33', function (){
 
     $user =  User::all()->first();

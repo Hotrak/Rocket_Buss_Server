@@ -29,6 +29,16 @@ class UserController extends Controller
         return response()->json(['user' => $user,'settings'=>$settings],200);
     }
 
+    public function authTelegram(Request $request){
+        $user = new User();
+        $user->name = $request->name;
+        $user->password = '8563215';
+        $user->phone = $request->phone;
+        $user->telegram_id = $request->telegram_id;
+        $user->save();
+        return $user;
+    }
+
     public function driver(){
         $user = auth()->user();
         $user->roles;
@@ -56,7 +66,6 @@ class UserController extends Controller
         $authRequest['password']=Hash::make($authRequest->password);
         $user = User::create($authRequest->all(['name','phone','password']));
 
-//        $newUser = User::find($user->id);
         $role = Role::find(3);
         $user->setRole($role);
 
@@ -134,4 +143,6 @@ class UserController extends Controller
 //        }
         return response()->json(['token'=>$accessToken],200);
     }
+
+
 }

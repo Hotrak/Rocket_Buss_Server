@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Order;
+use App\Schedule;
 use App\Town;
 use http\Client\Curl\User;
 use Illuminate\Http\Request;
@@ -24,12 +25,41 @@ class OrderController extends Controller
          ;
 
     public function ordersByUserId(Request $request,$userId){
-        $orders = DB::select($this->userOrders,['user_id'=>$userId,'order_status_max'=>$request->order_status_max,
-            'order_status_min'=>$request->order_status_min]);
+//        $orders = DB::select($this->userOrders,['user_id'=>$userId,'order_status_max'=>$request->order_status_max,
+//            'order_status_min'=>$request->order_status_min])->paginate(5);
+
+        $orders = Order::where('orders.user_id','=',$userId)
+            ->where('orders.order_status','<',$request->order_status_max)
+            ->where('orders.order_status','>=',$request->order_status_min)
+            ->select(
+                'orders.id',
+                'schedules.date_start',
+                'orders.order_status',
+                DB::raw('TIME_FORMAT(routes.time , "%H:%i") as time'),
+                'town1.name as town1_name',
+                'town2.name as town2_name'
+            )
+            ->join('schedule_routes','schedule_routes.id','=','orders.schedule_route_id')
+            ->join('routes','routes.id','=','schedule_routes.route_id')
+            ->join('schedules','schedules.id','=','schedule_routes.schedule_id')
+            ->join('town_connections','town_connections.id','=','routes.town_connection_id')
+            ->join('towns as town1','town1.id','=','town_connections.town1_id')
+            ->join('towns as town2','town2.id','=','town_connections.town2_id')
+            ->orderBy('schedules.date_start')
+            ->paginate($request->count);
         return $orders;
     }
 
     public function store(Request $request){
+
+//        return $request->schedule_route_id;
+
+        $schedule = new Schedule();
+        $scheduleWithCountPlaces = $schedule->singleRouteWithCountPlaces($request->schedule_route_id);
+        $accessCountPlaces = $scheduleWithCountPlaces->all_places - $scheduleWithCountPlaces->count_places;
+
+        if($request->count_places>$accessCountPlaces)
+            return response(['message'=>'Недостаточно мест'],422);
 
         if(isset($request->user_id)){
 
@@ -46,6 +76,26 @@ class OrderController extends Controller
         }
 
         $order = Order::create($request->all());
+
+//        date
+//        time
+//        point.name
+
+
+
+//        if($request->order_source == 1 || $request->order_source == 2){
+//
+//            return $order;
+//            $aboutOrder = new Order();
+//            $aboutOrder = $aboutOrder->orderById($order->id);
+//            $aboutOrder = $aboutOrder[0];
+//
+//            $user = new \App\User();
+//            $message = "Rocket Bus $aboutOrder->date_start $request->point_time мест:$aboutOrder->count_places ост:$aboutOrder->point";
+//            $user->sendSms($request->phone,$message);
+//        }
+
+
         return $order;
     }
     public function update(Request $request){
@@ -77,40 +127,8 @@ class OrderController extends Controller
 //              LEFT JOIN town_connections tc ON tc.id = ro.town_connection_id
 //              where o.id=:order_id',['order_id'=>$id]);
 
-        $order = DB::table('orders')
-            ->join('schedule_routes','schedule_routes.id','=','orders.schedule_route_id')
-            ->join('schedules','schedules.id','=','schedule_routes.schedule_id')
-            ->join('drivers','drivers.id','=','schedules.driver_id')
-            ->join('cars','cars.id','=','schedules.car_id')
-            ->join('car_models','car_models.id','=','cars.model_id')
-            ->join('colors','colors.id','=','cars.color_id')
-            ->join('routes','routes.id','=','schedule_routes.route_id')
-            ->join('town_connections','town_connections.id','=','routes.town_connection_id')
-            ->join('points','points.id','=','orders.point_id')
-            ->join('users','users.id','=','drivers.user_id')
-            ->select('orders.id',
-                'orders.count_places',
-                'points.name as point',
-                'colors.name as color',
-                'car_models.name as model',
-                'cars.number',
-                'users.phone',
-                'schedules.date_start',
-                'town_connections.price',
-                'town_connections.time_drive',
-                'town_connections.town1_id',
-                'town_connections.town2_id',
-                DB::raw('TIME_FORMAT(routes.time , \'%H:%i\') as time')
-
-            )
-            ->where("orders.id","=",$id)
-            ->get();
-
-        $order[0]->town1 = Town::find($order[0]->town1_id)->name;
-        $order[0]->town2 = Town::find($order[0]->town2_id)->name;
-
-
-        return $order;
+        $order = new Order();
+        return  $order->orderById($id);
 
     }
 

@@ -24,7 +24,12 @@ Route::get('/routes/{id}/{date}/{countPlaces}', 'RouteController@times');
 Route::post('/order/create', 'RouteController@order');
 
 Route::post('/login','UserController@login');
+Route::post('/auth_telegram','UserController@authTelegram');
 Route::post('/register','UserController@store');
+Route::get('/routes', 'TownConnectionController@index');
+Route::get('/routes/points/{id}', 'TownController@points');
+Route::get('/schedule_short','ScheduleController@shortSchedule');
+
 
 
 Route::middleware('auth:api')->group(function () {
@@ -55,15 +60,17 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/car_models','CarModelController@index');
     Route::post('/car_models','CarModelController@store');
 
-    Route::get('/routes', 'TownConnectionController@index');
     Route::post('/routes', 'TownConnectionController@store');
-    Route::get('/routes/points/{id}', 'TownController@points');
 
     Route::get('/towns', 'TownController@index');
     Route::post('/towns', 'TownController@store');
+    Route::put('/towns/{id}', 'TownController@update');
+    Route::get('/towns/{id}/points', 'TownController@allPoints');
 
     Route::get('/orders/{userId}','OrderController@ordersByUserId');
-    Route::post('/orders','OrderController@store');
+
+    Route::put('/orders/{id}','OrderController@update');
+
     Route::put('/orders/{id}/status','OrderController@updateStatus');
     Route::get('/orders/show/{id}','OrderController@show');
     Route::get('/orders/driver/{id}/{date}','OrderController@ordersByTownConnGroup');
@@ -73,18 +80,27 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/reserves/drivers','ReserveController@reservesDrivers');
 
     Route::get('/schedule','ScheduleController@index');
-    Route::get('/schedule_short','ScheduleController@shortSchedule');
-
     Route::post('/schedule','ScheduleController@store');
+    Route::put('/schedule/{id}/driver','ScheduleController@changeDriver');
+    Route::put('/schedule/{id}/car','ScheduleController@changeCar');
+    Route::delete('/schedule/{id}','ScheduleController@destroy');
+
     Route::get('/schedule/{id}/orders','ScheduleController@orders');
     Route::post('/schedule/car','ScheduleController@addCar');
 
+
     Route::get('/settings','SettingsController@index');
     Route::put('/settings','SettingsController@update');
+
 });
+    Route::get('/statistics','StatisticsController@statistics');
+    Route::get('/statistics/menu','StatisticsController@statisticMenu');
 
+Route::post('/orders','OrderController@store');// Не тута
 
-    Route::get('/single_route','ScheduleController@singleRoute');
+Route::resource('news', 'NewsController');
+Route::resource('lost_things', 'LostThingsController');
+Route::get('/single_route','ScheduleController@singleRoute');
 
 
 Route::get('/test',function (){

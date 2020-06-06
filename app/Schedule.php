@@ -75,6 +75,43 @@ class Schedule extends Model
             ->get();
         return $schedule;
     }
+
+    public function singleRouteByScheduleRouteId($scheduleRouteId){
+        $schedule = DB::table('schedules')
+            ->join('schedule_routes', 'schedule_routes.schedule_id', '=', 'schedules.id')
+            ->join('routes', 'routes.id', '=', 'schedule_routes.route_id')
+            ->join('town_connections', 'town_connections.id', '=', 'routes.town_connection_id')
+            ->join('drivers', 'drivers.id', '=', 'schedules.driver_id')
+            ->join('cars', 'cars.id', '=', 'schedules.car_id')
+            ->join('colors', 'colors.id', '=', 'cars.color_id')
+            ->join('car_models', 'car_models.id', '=', 'cars.model_id')
+            ->join('users', 'users.id', '=', 'drivers.user_id')
+            ->select('schedule_routes.id',
+                'routes.id as route_id',
+                'schedules.id as schedule_id',
+                'drivers.name',
+                'drivers.surname',
+                'colors.name as color',
+                'car_models.name as model',
+                DB::raw('TIME_FORMAT(routes.time , \'%H:%i\') as time'),
+                DB::raw('SUM(cars.count_places) as all_places'),
+                'town_connections.town_x',
+                'town_connections.town_y',
+                'town_connections.conn_group',
+                'users.phone',
+                'cars.number'
+            )
+            ->where('schedule_routes.id','=',$scheduleRouteId)
+            ->groupBy('schedule_routes.id',
+                'schedule_id',
+                'town_connections.town_x',
+                'town_connections.town_y',
+                'town_connections.conn_group')
+            ->orderBy('time')
+            ->first();
+        return $schedule;
+    }
+
     public function schedule($townConnectionId,$date){
         $schedule = DB::table('schedules')
             ->join('schedule_routes', 'schedule_routes.schedule_id', '=', 'schedules.id')
@@ -114,10 +151,10 @@ class Schedule extends Model
         $schedule = $this->schedule($townConnectionId,$date);
         return $this->getWithCountPlaces($schedule);
     }
-    public function singleRouteWithCountPlaces($townConnectionId,$date,$routeId){
-        $schedule = $this->singleRoute($townConnectionId,$date,$routeId);
+    public function singleRouteWithCountPlaces($scheduleRouteId){
+        $schedule = [0=>$this->singleRouteByScheduleRouteId($scheduleRouteId)];
         $result = $this->getWithCountPlaces($schedule);
-        return $this->groupByTime($result);
+        return $this->groupByTime($result)[0];
     }
 
     private function groupByTime($result){
@@ -216,7 +253,6 @@ class Schedule extends Model
         }
         return $schedule;
     }
-
 
     public function getItems($orders,$x,$y){
         $result = [];

@@ -7,6 +7,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
 use Laravel\Passport\HasApiTokens;
+use App\SmsBy;
+
 
 class User extends Authenticatable
 {
@@ -75,5 +77,18 @@ class User extends Authenticatable
             ->get();
 
         return $clients;
+    }
+
+    public function sendSms($phone,$message){
+
+        $phone  = preg_replace('/[^0-9]/', '', $phone);
+        $token = '9c734836b476fb8f4246d148149cefbd';
+
+        $sms        = new \App\SmsBy($token);
+        $res        = $sms->createSMSMessage($message);
+        $message_id = $res->message_id;
+        $res2       = $sms->sendSms($message_id, $phone);
+
+        return $res2;
     }
 }

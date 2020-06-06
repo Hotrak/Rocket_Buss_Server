@@ -28,6 +28,9 @@ class TownController extends Controller
 
         return $points;
     }
+    public function allPoints($townId){
+        return $points = Town::find($townId)->points;
+    }
     public function store(Request $request){
         $validator = Validator::make($request->all(), [
             'name' =>'required|unique:towns'
@@ -55,5 +58,32 @@ class TownController extends Controller
             $point->save();
         }
         return $town;
+    }
+
+    public function update(Request $request, $id){
+        $town = Town::find($id);
+//        $town->name = $request['town'];
+//        $town->save();
+
+        foreach ($request->points as $item){
+            $point = null;
+            if(isset($item['id'])){
+                $point = Point::find($item['id']);
+
+            }else{
+                $point = new Point();
+            }
+            $point->name = $item['name'];
+            $point->x = $item['x'];
+            $point->y = $item['y'];
+            $point->town_id = $town->id;
+            $point->point_time = $item['point_time'];
+            if(isset($item['point_time_transit']))
+                $point->point_time_transit = $item['point_time_transit'];
+            $point->is_transit = $item['is_transit'];
+            $point->save();
+
+        }
+
     }
 }

@@ -18,7 +18,32 @@ class TownConnectionController extends Controller
     }
 
     public function index(){
-        $towns = TownConnection::all()->fresh(['town1','town2']);
+//        $towns = TownConnection::all()->fresh(['town1','town2']);
+        $towns = TownConnection::orderBy('town_connections.town1_id')
+            ->orderBy('town_connections.town2_id')
+            ->with(['town1','town2'])
+            ->get();
+
+//        $count = 0;
+//        $result = [];
+//        foreach ($towns as $item){
+//
+//            if($count == 0){
+//                $result[] = $item;
+//            }
+//            else{
+//
+//                if($item->price != $result[$count]->price &&
+//                    $item->town1_id != $result[$count]->town1_id  &&
+//                    $item->town2_id != $result[$count]->town2_id){
+//
+//                    $result[] = $item;
+//                    $count++;
+//                }
+//            }
+//
+//        }
+
         return $towns;
     }
     public function store(Request $request){
@@ -27,6 +52,12 @@ class TownConnectionController extends Controller
             $townConnectionGroup = 0;
 
         $townConnectionGroup++;
+
+        $townRouteGroup = \App\TownConnection::all()->max('town_route_group');
+        if(!isset($townRouteGroup))
+            $townRouteGroup = 0;
+
+        $townRouteGroup++;
 
 
         $routeDaysGroup = \App\RouteDay::all()->max('route_days_group');
@@ -45,7 +76,6 @@ class TownConnectionController extends Controller
             $routeDaysGroup++;
         }
 
-
         $routesCount = count($request->routes);
         $temp = 0;
         $fixedTimeDrive = 0;
@@ -63,6 +93,8 @@ class TownConnectionController extends Controller
                 $townConnection->town1_id = $routeStart['townId'];
                 $townConnection->town2_id = $routeEnd['townId'];
                 $townConnection->conn_group = $townConnectionGroup;
+                $townConnection->town_route_group = $townRouteGroup;
+                $townConnection->is_back = 0;
                 $townConnection->town_x = $i+1;
                 $townConnection->town_y = $j+1;
                 if($routesCount>2)
@@ -120,11 +152,11 @@ class TownConnectionController extends Controller
 
             }
         }
-        $this->storeReverse($request->routes,$request->rhythm,$maxTimeDrive,$townConnectionGroup,$routeDayGroups);
+        $this->storeReverse($request->routes,$request->rhythm,$maxTimeDrive,$townConnectionGroup,$routeDayGroups,$townRouteGroup);
         return TownConnection::all()->fresh(['town1','town2']);
     }
 
-    private function storeReverse($routes,$rhythm,$maxTimeDrive,$townConnectionGroup,$routeDayGroups){
+    private function storeReverse($routes,$rhythm,$maxTimeDrive,$townConnectionGroup,$routeDayGroups,$townRouteGroup){
         $routes = array_reverse($routes);
         $routesCount = count($routes);
         $temp = 0;
@@ -144,6 +176,8 @@ class TownConnectionController extends Controller
                 $townConnection->town1_id = $routeStart['townId'];
                 $townConnection->town2_id = $routeEnd['townId'];
                 $townConnection->conn_group = $townConnectionGroup+1;
+                $townConnection->town_route_group = $townRouteGroup;
+                $townConnection->is_back = 1;
                 $townConnection->town_x = $i+1;
                 $townConnection->town_y = $j+1;
                 if($routesCount>2)
