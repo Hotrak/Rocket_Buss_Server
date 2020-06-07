@@ -24,6 +24,7 @@ Route::get('/routes/{id}/{date}/{countPlaces}', 'RouteController@times');
 Route::post('/order/create', 'RouteController@order');
 
 Route::post('/login','UserController@login');
+Route::post('/driver/login','UserController@driverLogin');
 Route::post('/auth_telegram','UserController@authTelegram');
 Route::post('/register','UserController@store');
 Route::get('/routes', 'TownConnectionController@index');
@@ -46,7 +47,7 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/drivers','DriverController@store');
     Route::put('/drivers/{id}','DriverController@update');
     Route::delete('/drivers/{id}','DriverController@destroy');
-    Route::get('/drivers/schedule','DriverController@schedule');
+    Route::get('/drivers/{id}/schedule','DriverController@schedule');
 
     Route::get('/cars','CarController@index');
     Route::post('/cars','CarController@store');

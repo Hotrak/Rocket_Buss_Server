@@ -47,22 +47,42 @@ class ScheduleController extends Controller
 
     public function store(Request $request){
 
-//        dd($this->changeDriver(139));
-//        dd(123);
-        $this->storeReserve(3, '2020-06-06');
+
+//        dd($counterDrivers);
+
+//        return;
+        var_dump($this->storeByData('2020-06-07'));
+        echo '<br>';
+        var_dump($this->storeByData('2020-06-08'));
+        echo '<br>';
+        var_dump($this->storeByData('2020-06-09'));
+        echo '<br>';
+        var_dump($this->storeByData('2020-06-10'));
+        echo '<br>';
+        var_dump($this->storeByData('2020-06-11'));
+        echo '<br>';
+        var_dump($this->storeByData('2020-06-12'));
+        echo '<br>';
+        var_dump($this->storeByData('2020-06-13'));
+        echo '<br>';
+        var_dump($this->storeByData('2020-06-14'));
+
+    }
+
+    public function storeByData($date){
+        $this->storeReserve(3, $date);
 
         $townRouteGroup = TownConnection::select('town_route_group')->groupBy('town_route_group')->get()->map(function ($item){
             return $item->town_route_group;
         });
 
+        $result = [];
         foreach ($townRouteGroup as $item){
-            $isStore = $this->autoStore('2020-06-06',$item);
-            if(!$isStore)
-                dd("STORE_WITH_ERROR");
-
-//            return;
+            $isStore = $this->autoStore($date,$item);
+            $result[] = $isStore;
         }
-        return;
+
+        return $result;
     }
 
     public function autoStore($date,$townRouteGroup){

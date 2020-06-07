@@ -93,13 +93,16 @@ class DriverManager
         $currentScheduleCreateInfo = $scheduleCreateInfo->getByDate($this->date);
 
         if(isset($currentScheduleCreateInfo)){
-            $this->workedDrivers = unserialize($currentScheduleCreateInfo->schedule_drivers);
+//            $this->workedDrivers = unserialize($currentScheduleCreateInfo->schedule_drivers);
             $this->unWorkedDrivers = unserialize($currentScheduleCreateInfo->schedule_holidays_drivers);
 
-            $countWorkedDrivers = count($this->workedDrivers);
-            if($countWorkedDrivers!= 0){
-                $counterDrivers = $this->workedDrivers[$countWorkedDrivers-1]+1;
-//                dd($counterDrivers);
+//            $countWorkedDrivers = count($this->workedDrivers);
+            $counterDrivers = Schedule::where('date_start','=',$this->date)
+                ->select('driver_id')
+                ->orderByDesc('id')
+                ->first();
+            if(isset($counterDrivers)){
+                $counterDrivers = $counterDrivers->driver_id+1;
                 $count = 0;
                 foreach ($this->drivers as $item){
                     if($item->id == $counterDrivers){
@@ -109,9 +112,16 @@ class DriverManager
                     $count++;
                 }
             }
+//                dd($counterDrivers);
 
-            if($currentScheduleCreateInfo->schedule_date == $this->date)
+
+            if($currentScheduleCreateInfo->schedule_date == $this->date){
                 $this->isTodayScheduleCreateInfo = true;
+            }
+            else{
+                $this->workedDrivers=[];
+            }
+
 
             return $currentScheduleCreateInfo;
         }
@@ -119,13 +129,12 @@ class DriverManager
     }
 
     public function saveChoseInfo(){
-//        if($isTodayScheduleCreateInfo)
-//            $scheduleCreateInfo = $currentScheduleCreateInfo;
-//        else
-
-        $scheduleCreateInfo = new ScheduleCreateInfo;
+        if($this->isTodayScheduleCreateInfo)
+            $scheduleCreateInfo = $this->currentScheduleCreateInfo;
+        else
+            $scheduleCreateInfo = new ScheduleCreateInfo;
         $scheduleCreateInfo->schedule_date = $this->date;
-        $scheduleCreateInfo->schedule_drivers = serialize($this->workedDrivers);
+        $scheduleCreateInfo->schedule_drivers = ""; //serialize($this->workedDrivers)
         $scheduleCreateInfo->schedule_holidays_drivers = serialize(array_unique($this->newUnWorkedDrivers));
         $scheduleCreateInfo->save();
     }

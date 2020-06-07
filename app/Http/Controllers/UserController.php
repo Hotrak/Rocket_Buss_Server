@@ -60,6 +60,28 @@ class UserController extends Controller
         return response($response, 200);
     }
 
+    public function driverLogin(){
+        if(!auth()->attempt(request(['phone','password'])))
+        {
+            $response = "Не верно введён логин или пароль";
+            return response($response, 422);
+        }
+
+        $user = auth()->user();
+//        $user->notify(new WelcomeMail());
+
+        if($user->hasRole('driver')){
+            $token = $user->createToken('Laravel Password Grant Client')->accessToken;
+            $response = ['token' => $token];
+            return response($response, 200);
+        }else{
+            $response = "Не верно введён логин или пароль";
+            return response($response, 422);
+        }
+
+
+    }
+
     public function store(UserRequest $authRequest){
         $validated = $authRequest->validated();
 

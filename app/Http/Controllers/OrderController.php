@@ -143,24 +143,26 @@ class OrderController extends Controller
             ->join('routes','routes.id','=','schedule_routes.route_id')
             ->join('town_connections','town_connections.id','=','routes.town_connection_id')
             ->join('points','points.id','=','orders.point_id')
-            ->join('users','users.id','=','drivers.user_id')
             ->select('orders.id',
                 'orders.count_places',
                 'points.name as point',
                 'colors.name as color',
                 'car_models.name as model',
                 'cars.number',
-                'users.phone',
+                'orders.user_id',
+                'orders.phone',
+                'orders.order_status',
+                'orders.order_source',
                 'schedules.date_start',
                 'town_connections.price',
                 'town_connections.time_drive',
                 'town_connections.town1_id',
                 'town_connections.town2_id',
                 DB::raw('TIME_FORMAT(routes.time , \'%H:%i\') as time')
-
             )
             ->where("town_connections.conn_group","=",$townConnGroup)
             ->whereDate("schedules.date_start",$date)
+            ->orderBy('routes.time')
             ->get();
 
         return $orders;
