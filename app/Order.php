@@ -71,11 +71,43 @@ class Order extends Model
                 DB::raw('TIME_FORMAT(routes.time , \'%H:%i\') as time')
 
             )
+
             ->get();
 
         $order[0]->town1 = Town::find($order[0]->town1_id)->name;
         $order[0]->town2 = Town::find($order[0]->town2_id)->name;
         return $order;
+    }
+
+    public function ordersByUserId($userId,$maxStatus,$minStatus,$count){
+
+
+        $date = "1999-06-21";
+        if($maxStatus == 2)
+            $date = now();
+
+
+        $orders = Order::where('orders.user_id','=',$userId)
+            ->where('orders.order_status','<',$maxStatus)
+            ->where('orders.order_status','>=',$minStatus)
+            ->select(
+                'orders.id',
+                'schedules.date_start',
+                'orders.order_status',
+                DB::raw('TIME_FORMAT(routes.time , "%H:%i") as time'),
+                'town1.name as town1_name',
+                'town2.name as town2_name'
+            )
+            ->join('schedule_routes','schedule_routes.id','=','orders.schedule_route_id')
+            ->join('routes','routes.id','=','schedule_routes.route_id')
+            ->join('schedules','schedules.id','=','schedule_routes.schedule_id')
+            ->join('town_connections','town_connections.id','=','routes.town_connection_id')
+            ->join('towns as town1','town1.id','=','town_connections.town1_id')
+            ->join('towns as town2','town2.id','=','town_connections.town2_id')
+            ->orderBy('schedules.date_start')
+            ->whereDate('schedules.date_start','>=',$date)
+            ->paginate($count);
+        return $orders;
     }
 
 

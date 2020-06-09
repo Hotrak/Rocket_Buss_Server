@@ -28,25 +28,27 @@ class OrderController extends Controller
 //        $orders = DB::select($this->userOrders,['user_id'=>$userId,'order_status_max'=>$request->order_status_max,
 //            'order_status_min'=>$request->order_status_min])->paginate(5);
 
-        $orders = Order::where('orders.user_id','=',$userId)
-            ->where('orders.order_status','<',$request->order_status_max)
-            ->where('orders.order_status','>=',$request->order_status_min)
-            ->select(
-                'orders.id',
-                'schedules.date_start',
-                'orders.order_status',
-                DB::raw('TIME_FORMAT(routes.time , "%H:%i") as time'),
-                'town1.name as town1_name',
-                'town2.name as town2_name'
-            )
-            ->join('schedule_routes','schedule_routes.id','=','orders.schedule_route_id')
-            ->join('routes','routes.id','=','schedule_routes.route_id')
-            ->join('schedules','schedules.id','=','schedule_routes.schedule_id')
-            ->join('town_connections','town_connections.id','=','routes.town_connection_id')
-            ->join('towns as town1','town1.id','=','town_connections.town1_id')
-            ->join('towns as town2','town2.id','=','town_connections.town2_id')
-            ->orderBy('schedules.date_start')
-            ->paginate($request->count);
+        $order = new Order();
+        $orders = $order->ordersByUserId($userId,$request->order_status_max,$request->order_status_min,$request->count);
+//        $orders = Order::where('orders.user_id','=',$userId)
+//            ->where('orders.order_status','<',$request->order_status_max)
+//            ->where('orders.order_status','>=',$request->order_status_min)
+//            ->select(
+//                'orders.id',
+//                'schedules.date_start',
+//                'orders.order_status',
+//                DB::raw('TIME_FORMAT(routes.time , "%H:%i") as time'),
+//                'town1.name as town1_name',
+//                'town2.name as town2_name'
+//            )
+//            ->join('schedule_routes','schedule_routes.id','=','orders.schedule_route_id')
+//            ->join('routes','routes.id','=','schedule_routes.route_id')
+//            ->join('schedules','schedules.id','=','schedule_routes.schedule_id')
+//            ->join('town_connections','town_connections.id','=','routes.town_connection_id')
+//            ->join('towns as town1','town1.id','=','town_connections.town1_id')
+//            ->join('towns as town2','town2.id','=','town_connections.town2_id')
+//            ->orderBy('schedules.date_start')
+//            ->paginate($request->count);
         return $orders;
     }
 
@@ -58,24 +60,39 @@ class OrderController extends Controller
         $scheduleWithCountPlaces = $schedule->singleRouteWithCountPlaces($request->schedule_route_id);
         $accessCountPlaces = $scheduleWithCountPlaces->all_places - $scheduleWithCountPlaces->count_places;
 
-        if($request->count_places>$accessCountPlaces)
+        if($request->count_places > $accessCountPlaces)
             return response(['message'=>'Недостаточно мест'],422);
-
-        if(isset($request->user_id)){
-
-            $price = DB::table('town_connections')
-                ->select('town_connections.price')
-                ->join('routes','routes.town_connection_id','=','town_connections.id')
-                ->join('schedule_routes','schedule_routes.route_id','=','routes.id')
-                ->where('schedule_routes.id','=',$request->schedule_route_id)//schedule_route_id
-                ->first()->price;
-
-            $user = \App\User::find($request->user_id);
-            $user->score = $user->score + ($price*10);
-            $user->save();
+        else{
+            if($request->count_places == $accessCountPlaces){
+                \App\User::notifyAllAdmins(['message'=>"На маршрут ".$scheduleWithCountPlaces->town1_name." ".$scheduleWithCountPlaces->town2_name." в ".$scheduleWithCountPlaces->time." закочились места"]);
+            }
         }
 
-        $order = Order::create($request->all());
+
+//        if(isset($request->user_id)){
+//
+//            $price = DB::table('town_connections')
+//                ->select('town_connections.price')
+//                ->join('routes','routes.town_connection_id','=','town_connections.id')
+//                ->join('schedule_routes','schedule_routes.route_id','=','routes.id')
+//                ->where('schedule_routes.id','=',$request->schedule_route_id)//schedule_route_id
+//                ->first()->price;
+//
+//            $user = \App\User::find($request->user_id);
+//            $user->score = $user->score + ($price*10);
+//            $user->save();
+//        }
+        $countPlaces = $request->count_places;
+        $order = '';
+        for($i=0;$i< $countPlaces;$i++){
+            $request['count_places'] = 1;
+            $order = Order::create($request->all());
+        }
+
+        $order->count_places = $countPlaces;
+
+
+
 
 //        date
 //        time
@@ -102,12 +119,47 @@ class OrderController extends Controller
         $order = Order::find($request->id);
         $order->fill($request->all());
         $order->save();
+
         return $order;
     }
     public function updateStatus(Request $request,$id){
+
         $order = Order::find($request->id);
         $order->order_status = $request->order_status;
+
+        if(isset($order->user_id)){
+
+            if($request->order_status!=3 && $request->order_status!=4&& $request->order_status!=5){
+
+                $price = DB::table('town_connections')
+                    ->select('town_connections.price')
+                    ->join('routes','routes.town_connection_id','=','town_connections.id')
+                    ->join('schedule_routes','schedule_routes.route_id','=','routes.id')
+                    ->where('schedule_routes.id','=',$request->schedule_route_id)//schedule_route_id
+                    ->first()->price;
+
+                $user = \App\User::find($order->user_id);
+
+                if($order->order_status == 6){
+                    $user->score = $user->score +200;
+                }else if($order->order_status == 1){
+                    $user->score = $user->score - ($price*10);
+                }
+
+                if($request->order_status == 6){
+                    $user->score = $user->score -200;
+                }else if($request->order_status == 1){
+                    $user->score = $user->score + ($price*10);
+                }
+
+                $user->save();
+            }
+
+        }
+
         $order->save();
+
+
         return $order;
     }
     public function destroy($id){
@@ -143,6 +195,7 @@ class OrderController extends Controller
             ->join('routes','routes.id','=','schedule_routes.route_id')
             ->join('town_connections','town_connections.id','=','routes.town_connection_id')
             ->join('points','points.id','=','orders.point_id')
+            ->join('towns','towns.id','=','town_connections.town1_id')
             ->select('orders.id',
                 'orders.count_places',
                 'points.name as point',
@@ -158,6 +211,7 @@ class OrderController extends Controller
                 'town_connections.time_drive',
                 'town_connections.town1_id',
                 'town_connections.town2_id',
+                'towns.name as town1_name',
                 DB::raw('TIME_FORMAT(routes.time , \'%H:%i\') as time')
             )
             ->where("town_connections.conn_group","=",$townConnGroup)

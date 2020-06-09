@@ -93,6 +93,9 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/settings','SettingsController@index');
     Route::put('/settings','SettingsController@update');
 
+    Route::get('/users/{user_id}/notifications','NotificationController@index');
+    Route::put('/users/{user_id}/notifications/{n_id}','NotificationController@markAsRead');
+
 });
     Route::get('/statistics','StatisticsController@statistics');
     Route::get('/statistics/menu','StatisticsController@statisticMenu');

@@ -71,7 +71,7 @@ class TestNotificaton extends Notification
     public function toBroadcast($notifiable)
     {
         return new BroadcastMessage([
-            'dataFromServer' => $this->data,
+            'data' => $this->data,
         ]);
     }
 }

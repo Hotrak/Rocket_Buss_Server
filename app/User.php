@@ -6,6 +6,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Laravel\Passport\HasApiTokens;
 use App\SmsBy;
 
@@ -82,7 +83,7 @@ class User extends Authenticatable
     public function sendSms($phone,$message){
 
         $phone  = preg_replace('/[^0-9]/', '', $phone);
-        $token = '9c734836b476fb8f4246d148149cefbd';
+        $token = '9c734836b476fb8f4246d148149cefbd';//ffb3aefa48dbe35099a14099b403531d
 
         $sms        = new \App\SmsBy($token);
         $res        = $sms->createSMSMessage($message);
@@ -90,5 +91,12 @@ class User extends Authenticatable
         $res2       = $sms->sendSms($message_id, $phone);
 
         return $res2;
+    }
+
+    public static function notifyAllAdmins($data){
+        $admins = User::all()->filter(function ($user){
+            return $user->hasRole('admin');
+        });
+        Notification::send($admins,new \App\Notifications\TestNotificaton($data));
     }
 }

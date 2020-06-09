@@ -32,7 +32,7 @@ Route::get('/22222', function (){
         ->first()->price;
     dd($price);
 });
-Route::get('/', 'ScheduleController@store');
+//Route::get('/', 'ScheduleController@store');
 Route::get('/debug', function (){
 //    $schedule = new Schedule();
 //    $scheduleByScheduleRouteId = $schedule->singleRouteByScheduleRouteId(353);
@@ -49,11 +49,7 @@ Route::get('/33', function (){
     $user =  User::all()->first();
 //    $user->notify(new \App\Notifications\TestNotificaton($user));
 //
-    $admins = User::all()->filter(function ($user){
-        return $user->hasRole('admin');
-    });
 
-    Notification::send($admins,new \App\Notifications\TestNotificaton($user));
 //
 //    dd($admins);
     //

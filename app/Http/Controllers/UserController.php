@@ -55,6 +55,11 @@ class UserController extends Controller
         $user = auth()->user();
 //        $user->notify(new WelcomeMail());
 
+        if($user->lock==1){
+            $response = "Ваш аккаунт заблокирован";
+            return response($response, 422);
+        }
+
         $token = $user->createToken('Laravel Password Grant Client')->accessToken;
         $response = ['token' => $token];
         return response($response, 200);

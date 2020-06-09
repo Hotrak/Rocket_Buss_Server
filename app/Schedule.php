@@ -86,6 +86,8 @@ class Schedule extends Model
             ->join('colors', 'colors.id', '=', 'cars.color_id')
             ->join('car_models', 'car_models.id', '=', 'cars.model_id')
             ->join('users', 'users.id', '=', 'drivers.user_id')
+            ->join('towns as town1','town1.id','town_connections.town1_id')
+            ->join('towns as town2','town2.id','town_connections.town2_id')
             ->select('schedule_routes.id',
                 'routes.id as route_id',
                 'schedules.id as schedule_id',
@@ -98,6 +100,8 @@ class Schedule extends Model
                 'town_connections.town_x',
                 'town_connections.town_y',
                 'town_connections.conn_group',
+                'town1.name as town1_name',
+                'town2.name as town2_name',
                 'users.phone',
                 'cars.number'
             )

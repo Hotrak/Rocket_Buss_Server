@@ -69,7 +69,7 @@ class DriverController extends Controller
               JOIN schedules sch ON sch.id = sr.schedule_id
               LEFT JOIN routes ro ON ro.id = sr.route_id
               LEFT JOIN town_connections tc ON tc.id = ro.town_connection_id
-              where sch.driver_id=21 AND tc.town_x = 1
+              where sch.driver_id=:driverId AND tc.town_x = 1
   AND tc.town_y = 
           (SELECT MAX(tc2.town_y) FROM town_connections tc2 WHERE tc.conn_group = tc2.conn_group)
   AND sch.date_start >= now() 
