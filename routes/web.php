@@ -32,7 +32,7 @@ Route::get('/22222', function (){
         ->first()->price;
     dd($price);
 });
-//Route::get('/', 'ScheduleController@store');
+Route::get('/123456', 'ScheduleController@store');
 Route::get('/debug', function (){
 //    $schedule = new Schedule();
 //    $scheduleByScheduleRouteId = $schedule->singleRouteByScheduleRouteId(353);
