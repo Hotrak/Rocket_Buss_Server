@@ -51,21 +51,11 @@ class ScheduleController extends Controller
 //        dd($counterDrivers);
 
 //        return;
-        var_dump($this->storeByData('2020-06-07'));
-        echo '<br>';
-        var_dump($this->storeByData('2020-06-08'));
-        echo '<br>';
-        var_dump($this->storeByData('2020-06-09'));
-        echo '<br>';
-        var_dump($this->storeByData('2020-06-10'));
-        echo '<br>';
-        var_dump($this->storeByData('2020-06-11'));
-        echo '<br>';
-        var_dump($this->storeByData('2020-06-12'));
-        echo '<br>';
-        var_dump($this->storeByData('2020-06-13'));
-        echo '<br>';
-        var_dump($this->storeByData('2020-06-14'));
+        for ($i = 9;$i< 30;$i++){
+            var_dump($this->storeByData("2020-06-0$i"));
+            echo '<br>';
+        }
+
 
     }
 
