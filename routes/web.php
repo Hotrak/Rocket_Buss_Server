@@ -37,10 +37,10 @@ Route::get('/debug', function (){
 //    $schedule = new Schedule();
 //    $scheduleByScheduleRouteId = $schedule->singleRouteByScheduleRouteId(353);
 //    dd($scheduleByScheduleRouteId);
-
-    $reserveDrivers = new \App\ReserveDriver();
-    $reserveDriver = $reserveDrivers->getRandomByDate('2020-05-30');
-    dd($reserveDriver);
+    $today_dt = new DateTime();
+    $time = $today_dt->format("H:i").":00";
+    $date = $today_dt->format("Y-m-d");
+    dd($date,$time);
 
     //    $scheduleByRouteId = $schedule->singleRoute();
 });

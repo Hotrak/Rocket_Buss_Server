@@ -15,8 +15,8 @@ class Schedule extends Model
 
         $time = "00:00:00";
         if($today_dt->format("Y-m-d") == $expire_dt->format("Y-m-d")) {
-//            $time = $today_dt->format("H:i").":00";
-            $time = "07:00:00";
+            $time = $today_dt->format("H:i").":00";
+//            $time = "07:00:00";
         }
 
 
