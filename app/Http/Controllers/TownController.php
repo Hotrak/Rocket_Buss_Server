@@ -21,6 +21,11 @@ class TownController extends Controller
         $townConnection = TownConnection::find($townConnectionId);
         if($townConnection->is_transit == true && $townConnection->town_x != 1){
             $points = $townConnection->town1->points->where('is_transit',1);
+            $oldPoints = $points;
+            $points = [];
+            foreach ($oldPoints as $item){
+                $points[] = $item;
+            }
 //            dd($points);
 
         }
