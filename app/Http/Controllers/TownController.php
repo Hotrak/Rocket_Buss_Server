@@ -20,12 +20,13 @@ class TownController extends Controller
     public function points($townConnectionId){
         $townConnection = TownConnection::find($townConnectionId);
         if($townConnection->is_transit == true && $townConnection->town_x != 1){
-            $points = $townConnection->town1->points->where('is_transit',1)->get();
+            $points = $townConnection->town1->points->where('is_transit',1);
+//            dd($points);
+
         }
         else{
             $points = $townConnection->town1->points;
         }
-
         return $points;
     }
     public function allPoints($townId){
