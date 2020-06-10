@@ -71,7 +71,6 @@ class Order extends Model
                 DB::raw('TIME_FORMAT(routes.time , \'%H:%i\') as time')
 
             )
-
             ->get();
 
         $order[0]->town1 = Town::find($order[0]->town1_id)->name;

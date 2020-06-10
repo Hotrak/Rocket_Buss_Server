@@ -73,7 +73,6 @@ Route::middleware('auth:api')->group(function () {
     Route::put('/orders/{id}','OrderController@update');
 
     Route::put('/orders/{id}/status','OrderController@updateStatus');
-    Route::get('/orders/show/{id}','OrderController@show');
     Route::get('/orders/driver/{id}/{date}','OrderController@ordersByTownConnGroup');
     Route::delete('/orders/{id}','OrderController@destroy');
 
@@ -97,6 +96,8 @@ Route::middleware('auth:api')->group(function () {
     Route::put('/users/{user_id}/notifications/{n_id}','NotificationController@markAsRead');
 
 });
+Route::get('/orders/show/{id}','OrderController@show');
+
     Route::get('/statistics','StatisticsController@statistics');
     Route::get('/statistics/menu','StatisticsController@statisticMenu');
 

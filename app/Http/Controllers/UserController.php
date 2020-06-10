@@ -30,13 +30,20 @@ class UserController extends Controller
     }
 
     public function authTelegram(Request $request){
-        $user = new User();
-        $user->name = $request->name;
-        $user->password = '8563215';
-        $user->phone = $request->phone;
-        $user->telegram_id = $request->telegram_id;
-        $user->save();
-        return $user;
+
+        $oldUser = User::where('telegram_id','=',$request->telegram_id)->first();
+        if(!isset($oldUser)){
+            $user = new User();
+            $user->name = $request->name;
+            $user->password = '8563215';
+            $user->phone = $request->phone;
+            $user->telegram_id = $request->telegram_id;
+            $user->save();
+            return $user;
+        }
+
+
+        return $oldUser;
     }
 
     public function driver(){
@@ -143,6 +150,9 @@ class UserController extends Controller
         $request['password']=Hash::make($request->password);
         $user = User::create($request->all(['name','phone','password']));
 //        auth()->login($user);
+
+        $role = Role::find(3);
+        $user->setRole($role);
 
         $token = $user->createToken('Laravel Password Grant Client')->accessToken;
         $response = ['token' => $token];
