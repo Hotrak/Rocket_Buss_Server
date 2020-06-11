@@ -85,10 +85,16 @@ class Order extends Model
         $date = "1999-06-21";
         $today_dt = new DateTime();
         $time = $today_dt->format("H:i").":00";
-        if($maxStatus == 2)
+        if($maxStatus == 2){
+            $maxStatus = 1;
             $date = now();
+        }
+        if($minStatus == 2){
+            $minStatus = 1;
+        }
 
-        Order::whereDate('schedules.date_start',$date)
+
+        Order::whereDate('schedules.date_start',now())
             ->whereTime('routes.time','<=',$time)
             ->where('orders.order_status','=',0)
             ->join('schedule_routes','schedule_routes.id','=','orders.schedule_route_id')

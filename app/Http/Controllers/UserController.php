@@ -94,7 +94,7 @@ class UserController extends Controller
 
     }
 
-    public function store(UserRequest $authRequest){
+    public function store2(UserRequest $authRequest){
         $validated = $authRequest->validated();
 
         $authRequest['password']=Hash::make($authRequest->password);
@@ -123,12 +123,11 @@ class UserController extends Controller
 
         return response($user, 200);
     }
-    public function store2(Request $request){
+    public function store(Request $request){
 
         $rules=[
-            'email' =>'required|unique:users|email',
             'password' =>'required|min:6|max:40|confirmed ',
-            'phone' =>'required|unique:phone',
+            'phone' =>'required|unique:users',
             'name' =>'required',
         ];
         $messages = [
@@ -144,7 +143,7 @@ class UserController extends Controller
         $validator = Validator::make($request->all(), $rules, $messages);
 
         if ($validator->fails()) {
-            return response(["token" => $validator->errors()->all()],422);
+            return response(["errors" => $validator->errors()->all()],422);
         }
 
         $request['password']=Hash::make($request->password);

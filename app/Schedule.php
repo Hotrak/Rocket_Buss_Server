@@ -36,6 +36,7 @@ class Schedule extends Model
             ->where('town_connections.id','=',$townConnectionId)
             ->where('routes.time','>',$time)
             ->whereDate('schedules.date_start',$date)
+            ->whereDate('schedules.date_start','>=',$today_dt->format("Y-m-d"))
             ->groupBy('schedule_routes.id',
             'schedule_id',
             'town_connections.town_x',
