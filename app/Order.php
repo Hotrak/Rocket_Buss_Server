@@ -2,6 +2,7 @@
 
 namespace App;
 
+use DateTime;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
@@ -82,8 +83,18 @@ class Order extends Model
 
 
         $date = "1999-06-21";
+        $today_dt = new DateTime();
+        $time = $today_dt->format("H:i").":00";
         if($maxStatus == 2)
             $date = now();
+
+        Order::whereDate('schedules.date_start',$date)
+            ->whereTime('routes.time','<=',$time)
+            ->where('orders.order_status','=',0)
+            ->join('schedule_routes','schedule_routes.id','=','orders.schedule_route_id')
+            ->join('schedules','schedules.id','=','schedule_routes.schedule_id')
+            ->join('routes','routes.id','=','schedule_routes.route_id')
+            ->update(['orders.order_status'=>3]);
 
 
         $orders = Order::where('orders.user_id','=',$userId)
