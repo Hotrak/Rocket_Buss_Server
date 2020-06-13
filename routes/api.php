@@ -27,13 +27,14 @@ Route::post('/login','UserController@login');
 Route::post('/driver/login','UserController@driverLogin');
 Route::post('/auth_telegram','UserController@authTelegram');
 Route::post('/register','UserController@store');
-Route::get('/routes', 'TownConnectionController@index');
 Route::get('/routes/points/{id}', 'TownController@points');
 Route::get('/schedule_short','ScheduleController@shortSchedule');
 
+Route::get('/routes', 'TownConnectionController@index');
 
 
 Route::middleware('auth:api')->group(function () {
+
     Route::get('/user','UserController@index');
     Route::put('/user/{id}/state','UserController@updateState');
 
@@ -73,8 +74,10 @@ Route::middleware('auth:api')->group(function () {
     Route::put('/orders/{id}','OrderController@update');
 
     Route::put('/orders/{id}/status','OrderController@updateStatus');
-    Route::get('/orders/driver/{id}/{date}','OrderController@ordersByTownConnGroup');
+    Route::get('/orders/driver/{id}/{schedule_route_id}','OrderController@ordersByTownConnGroup');
     Route::delete('/orders/{id}','OrderController@destroy');
+    Route::get('/telegram/{id}/orders','OrderController@telegramUserOrders');
+
 
     Route::get('/reserves/cars','ReserveController@reservesCars');
     Route::get('/reserves/drivers','ReserveController@reservesDrivers');
@@ -94,9 +97,9 @@ Route::middleware('auth:api')->group(function () {
 
     Route::get('/users/{user_id}/notifications','NotificationController@index');
     Route::put('/users/{user_id}/notifications/{n_id}','NotificationController@markAsRead');
+    Route::get('/orders/show/{id}','OrderController@show');
 
 });
-Route::get('/orders/show/{id}','OrderController@show');
 
     Route::get('/statistics','StatisticsController@statistics');
     Route::get('/statistics/menu','StatisticsController@statisticMenu');

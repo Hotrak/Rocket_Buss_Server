@@ -64,7 +64,8 @@ class DriverController extends Controller
         $driverOrders = 'SELECT sch.id,
         (SELECT  t.name FROM towns t WHERE t.id= tc.town1_id) AS town1_name,
         (SELECT t2.name FROM towns t2 WHERE t2.id= tc.town2_id) AS town2_name,
-        sch.date_start,TIME_FORMAT(ro.time , "%H:%i") as time,tc.conn_group 
+        sch.date_start,TIME_FORMAT(ro.time , "%H:%i") as time,tc.conn_group,
+        sr.id as schedule_routes_id
         FROM schedule_routes sr
               JOIN schedules sch ON sch.id = sr.schedule_id
               LEFT JOIN routes ro ON ro.id = sr.route_id

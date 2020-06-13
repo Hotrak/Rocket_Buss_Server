@@ -15,4 +15,11 @@ class TownConnection extends Model
     public function town2(){
         return $this->hasOne('App\Town', 'id', 'town2_id');
     }
+    public static function getByConnGroup($connGroup){
+        return TownConnection::where('conn_group','=',$connGroup)
+            ->join('towns as town1','town1.id','=','town_connections.town1_id')
+            ->join('towns as town2','town2.id','=','town_connections.town2_id')
+            ->select('town_connections.*','town1.name as town1_name','town2.name as town2_name')
+            ->get();
+    }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Order;
 use App\Schedule;
 use App\Town;
+use App\TownConnection;
 use http\Client\Curl\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -82,6 +83,11 @@ class OrderController extends Controller
 //            $user->score = $user->score + ($price*10);
 //            $user->save();
 //        }
+        if($request->user_id == -1){
+            $oldUser = \App\User::where('telegram_id','=',$request->telegram_id)->first();
+            $request['user_id'] = $oldUser->id;
+            $request['phone'] = $oldUser->phone;
+        }
         $countPlaces = $request->count_places;
         $order = '';
         for($i=0;$i< $countPlaces;$i++){
@@ -177,47 +183,18 @@ class OrderController extends Controller
 
     }
 
-    public function ordersByTownConnGroup($townConnGroup,$date){
-        $orders = DB::table('orders')
-            ->join('schedule_routes','schedule_routes.id','=','orders.schedule_route_id')
-            ->join('schedules','schedules.id','=','schedule_routes.schedule_id')
-            ->join('drivers','drivers.id','=','schedules.driver_id')
-            ->join('cars','cars.id','=','schedules.car_id')
-            ->join('car_models','car_models.id','=','cars.model_id')
-            ->join('colors','colors.id','=','cars.color_id')
-            ->join('routes','routes.id','=','schedule_routes.route_id')
-            ->join('town_connections','town_connections.id','=','routes.town_connection_id')
-            ->join('points','points.id','=','orders.point_id')
-            ->join('towns','towns.id','=','town_connections.town1_id')
-            ->select('orders.id',
-                'orders.count_places',
-                'points.name as point',
-                'colors.name as color',
-                'car_models.name as model',
-                'cars.number',
-                'orders.user_id',
-                'orders.phone',
-                'orders.order_status',
-                'orders.order_source',
-                'schedules.date_start',
-                'town_connections.price',
-                'town_connections.time_drive',
-                'town_connections.town1_id',
-                'town_connections.town2_id',
-                'towns.name as town1_name',
-                DB::raw('TIME_FORMAT(routes.time , \'%H:%i\') as time')
-            )
-            ->where("town_connections.conn_group","=",$townConnGroup)
-            ->whereDate("schedules.date_start",$date)
-            ->orderBy('routes.time')
-            ->get();
+    public function ordersByTownConnGroup($townConnGroup,$scheduleId){
+        $orders = new Order();
 
-        return $orders;
+        $orders = $orders->ordersByTownConnGroup($scheduleId);
+        $townConn = TownConnection::getByConnGroup($townConnGroup);
+
+        return ['orders'=>$orders,'town_connections'=>$townConn];
 
     }
 
     public function telegramUserOrders($id){
-        $oldUser = \App\User::where('telegram_id','==',$id->telegram_id)->first();
+        $oldUser = \App\User::where('telegram_id','=',$id)->first();
         $order = new Order();
         $orders = $order->ordersByUserId($oldUser->id,2,0,20);
         return $orders;

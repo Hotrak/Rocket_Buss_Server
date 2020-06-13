@@ -126,5 +126,45 @@ class Order extends Model
         return $orders;
     }
 
+    public function ordersByTownConnGroup($scheduleRouteId){
+        $orders = DB::table('orders')
+            ->join('schedule_routes','schedule_routes.id','=','orders.schedule_route_id')
+            ->join('schedules','schedules.id','=','schedule_routes.schedule_id')
+            ->join('drivers','drivers.id','=','schedules.driver_id')
+            ->join('cars','cars.id','=','schedules.car_id')
+            ->join('car_models','car_models.id','=','cars.model_id')
+            ->join('colors','colors.id','=','cars.color_id')
+            ->join('routes','routes.id','=','schedule_routes.route_id')
+            ->join('town_connections','town_connections.id','=','routes.town_connection_id')
+            ->join('points','points.id','=','orders.point_id')
+            ->join('towns','towns.id','=','town_connections.town1_id')
+            ->select('orders.id',
+                'orders.count_places',
+                'points.name as point',
+                'points.point_time',
+                'points.point_time_transit',
+                'colors.name as color',
+                'car_models.name as model',
+                'cars.number',
+                'orders.user_id',
+                'orders.phone',
+                'orders.order_status',
+                'orders.order_source',
+                'schedules.date_start',
+                'town_connections.price',
+                'town_connections.time_drive',
+                'town_connections.town1_id',
+                'town_connections.town2_id',
+                'towns.name as town1_name',
+                DB::raw('TIME_FORMAT(routes.time , \'%H:%i\') as time')
+            )
+            ->where("schedules.id","=",$scheduleRouteId)
+            ->orderBy('routes.time')
+            ->get();
+
+        return $orders;
+
+    }
+
 
 }

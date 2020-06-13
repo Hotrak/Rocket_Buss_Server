@@ -31,6 +31,13 @@ class UserController extends Controller
 
     public function authTelegram(Request $request){
 
+        $exist_user =  User::where('phone','=',$request->phone)->first();
+        if(isset($exist_user)){
+            $exist_user->telegram_id = $request->telegram_id;
+            $exist_user->save();
+            return $exist_user;
+        }
+
         $oldUser = User::where('telegram_id','=',$request->telegram_id)->first();
         if(!isset($oldUser)){
             $user = new User();

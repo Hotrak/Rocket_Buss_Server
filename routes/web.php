@@ -37,10 +37,16 @@ Route::get('/debug', function (){
 //    $schedule = new Schedule();
 //    $scheduleByScheduleRouteId = $schedule->singleRouteByScheduleRouteId(353);
 //    dd($scheduleByScheduleRouteId);
-    $today_dt = new DateTime();
-    $time = $today_dt->format("H:i").":00";
-    $date = $today_dt->format("Y-m-d");
-    dd($date,$time);
+
+    $users = User::all();
+    foreach ($users as $user){
+        $user->phone = '+'.preg_replace('/[^0-9]/', '', $user->phone);
+        $user->save();
+    }
+//    $today_dt = new DateTime();
+//    $time = $today_dt->format("H:i").":00";
+//    $date = $today_dt->format("Y-m-d");
+//    dd($date,$time);
 
     //    $scheduleByRouteId = $schedule->singleRoute();
 });
