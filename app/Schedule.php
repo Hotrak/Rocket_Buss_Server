@@ -105,6 +105,7 @@ class Schedule extends Model
                 'town_connections.conn_group',
                 'town1.name as town1_name',
                 'town2.name as town2_name',
+                'town1.id as town1_id',
                 'users.phone',
                 'cars.number'
             )

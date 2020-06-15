@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Car;
 use App\Order;
+use App\Point;
 use App\Schedule;
 use App\Town;
 use App\TownConnection;
@@ -88,6 +89,9 @@ class OrderController extends Controller
             $oldUser = \App\User::where('telegram_id','=',$request->telegram_id)->first();
             $request['user_id'] = $oldUser->id;
             $request['phone'] = $oldUser->phone;
+        }
+        if($request->point_id == 0){
+            $request['point_id'] = Point::where('town_id','=',$scheduleWithCountPlaces->town1_id)->first()->id;
         }
         $countPlaces = $request->count_places;
         $order = '';
