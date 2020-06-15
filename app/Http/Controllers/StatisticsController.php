@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Settings;
+use App\TownConnection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -11,7 +12,7 @@ class StatisticsController extends Controller
     public function statistics(Request $request){
         $where = '';
         if(isset($request->dateStart))
-            $where =" WHERE schedules.date_start BETWEEN '$request->dateStart' and '$request->dateEnd' ";
+            $where =" and schedules.date_start BETWEEN '$request->dateStart' and '$request->dateEnd' ";
 
         $statistics =  DB::select('SELECT CONCAT(town1.name,\'-\',town2.name) AS full_name,
             town_connections.id,
@@ -19,6 +20,9 @@ class StatisticsController extends Controller
           town2.name AS town2_name,
           SUM(orders.count_places) AS count_places,
           town_connections.price,
+          town_connections.town_x,
+          town_connections.town_y,
+          
           schedules.date_start,
           DAYOFWEEK(schedules.date_start) AS date_start_of_w,
         
@@ -34,7 +38,9 @@ class StatisticsController extends Controller
           JOIN schedules ON schedules.id = schedule_routes.schedule_id
           JOIN orders ON orders.schedule_route_id = schedule_routes.id
         
-         '.$where.'
+          WHERE town_connections.id <> -1 '.$where.' and town_connections.town_x =1 and 
+          town_connections.town_y = (select max(town_conn2.town_y) 
+          from town_connections as town_conn2 where town_conn2.conn_group = town_connections.conn_group)
         
           GROUP BY
           town_connections.id, 
@@ -49,6 +55,13 @@ class StatisticsController extends Controller
           
           ORDER BY town_connections.id
           ');
+
+//        $statisticsQuery = TownConnection::query();
+
+//        if($request->has('dateStart')|| $request->has('dateEnd'))
+//            $statisticsQuery->whereBetween('schedules.date_start',$request->dateStart,$request->dateEnd);
+//
+//        $statisticsQuery->
 
         $dates = DB::select('SELECT MAX(date_start) as max_date , MIN(date_start) as min_date from schedules');
 //        dd($dates[0]->max_date);

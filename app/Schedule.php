@@ -137,6 +137,7 @@ class Schedule extends Model
                 'car_models.name as model',
                 DB::raw('TIME_FORMAT(routes.time , \'%H:%i\') as time'),
                 'cars.count_places as all_places',
+                'cars.number',
                 'town_connections.town_x',
                 'town_connections.town_y',
                 'town_connections.conn_group',
