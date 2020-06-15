@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Driver;
 use App\Http\Requests\DriverRequest;
+use App\Role;
 use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,8 +18,30 @@ class DriverController extends Controller
 //        $this->middleware('role:admin');
     }
 
-    public function index(){
-        $drivers = Driver::all()->fresh('user');
+    public function index(Request $request){
+
+        $driversQuery = Driver::query();
+        $driversQuery->join('users','users.id','=','drivers.user_id')
+            ->select('drivers.*','users.phone');
+
+        if($request->has('search')){
+            foreach (['users.phone','drivers.name','drivers.surname','drivers.patronymic'] as $item){
+                $driversQuery->orWhere($item,'like','%'.$request->search.'%');
+            }
+        }
+
+        if($request->has('sort')){
+            if($request->has('desc'))
+                $driversQuery->orderByDesc($request->sort);
+            else
+                $driversQuery->orderBy($request->sort);
+
+
+        }
+
+//        if($request->)
+
+        $drivers = $driversQuery->paginate(10);
         return $drivers;
     }
     public function store(DriverRequest $request){
@@ -27,7 +50,8 @@ class DriverController extends Controller
         $request['password']=Hash::make($request->password);
         $user = User::create($request->all(['name','email','phone','password']));
 
-        $user->setRole('driver');
+        $role = Role::find(2);
+        $user->setRole($role);
 
         $driver = Driver::create($request->all(['name','surname','patronymic','birthday','med_exam','town','street','home_num','week_end']));
         $driver->user_id = $user->id;
@@ -51,7 +75,7 @@ class DriverController extends Controller
         $driver->week_end = $request->week_end;
         $driver->save();
         $driver->user;
-
+        $driver['phone'] = $driver->user->phone;
         return $driver;
     }
 

@@ -28,7 +28,9 @@ class ReserveController extends Controller
             ->join('drivers', 'reserve_drivers.driver_id', '=', 'drivers.id')
             ->join('users', 'users.id', '=', 'drivers.user_id')
             ->select('reserve_drivers.*',
-                'drivers.*',
+                'drivers.name',
+                'drivers.surname',
+                'drivers.patronymic',
                 'users.phone'
                 )
             ->whereDate('reserve_date',$request->date)
@@ -36,5 +38,12 @@ class ReserveController extends Controller
 
         return $reserve;
 
+    }
+
+    public function destroyCar($id){
+        ReserveCar::find($id)->delete();
+    }
+    public function destroyDriver($id){
+        ReserveDriver::find($id)->delete();
     }
 }

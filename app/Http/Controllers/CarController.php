@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Car;
+use App\Driver;
 use App\Http\Requests\CarRequest;
 use App\ReserveCar;
 use App\Schedule;
@@ -15,8 +16,19 @@ class CarController extends Controller
         $this->middleware('role:admin');
     }
 
-    public function index(){
-        return Car::all()->fresh(['color','model']);
+    public function index(Request $request){
+
+        $carQuery = Car::query();
+        $carQuery->join('car_models','car_models.id','=','cars.model_id')
+            ->join('colors','colors.id','=','cars.color_id')
+            ->select('cars.*','car_models.name as model_name','colors.name as color_name');
+
+        if($request->has('search')){
+            foreach (['cars.number','car_models.name','colors.name','cars.count_places'] as $item){
+                $carQuery->orWhere($item,'like','%'.$request->search.'%');
+            }
+        }
+        return $carQuery->paginate(10);
     }
 
     public function store(CarRequest $request){
@@ -39,8 +51,9 @@ class CarController extends Controller
         $car->end_of_insurance = $request->end_of_insurance;
         $car->save();
 
-        $car->color;
-        $car->model;
+        $car['color_name'] = $car->color->name;
+        $car['model_name'] = $car->model->name;
+
         return $car;
     }
     public function updateState(Request $request,$id){
@@ -60,5 +73,9 @@ class CarController extends Controller
         Schedule::where('car_id','=',$car->id)->whereDate('date_start','>=',now())->update(['car_id'=> $reserveCar->car_id]);
 
         return $reserveCar;
+    }
+
+    public function destroy($id){
+        Car::find($id)->delete();
     }
 }

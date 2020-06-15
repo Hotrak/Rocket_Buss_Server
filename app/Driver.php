@@ -3,10 +3,13 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
 
 class Driver extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'name','surname','patronymic','birthday','med_exam','town','street','home_num','week_end'
     ];

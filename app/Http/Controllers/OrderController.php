@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Car;
 use App\Order;
 use App\Schedule;
 use App\Town;
@@ -188,8 +189,11 @@ class OrderController extends Controller
 
         $orders = $orders->ordersByTownConnGroup($scheduleId);
         $townConn = TownConnection::getByConnGroup($townConnGroup);
+        $car = Car::where('schedules.id','=',$scheduleId)
+            ->join('schedules','schedules.car_id','=','cars.id')
+            ->first();
 
-        return ['orders'=>$orders,'town_connections'=>$townConn];
+        return ['orders'=>$orders,'town_connections'=>$townConn,'car'=>$car];
 
     }
 

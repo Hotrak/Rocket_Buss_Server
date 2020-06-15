@@ -10,6 +10,7 @@ use App\Settings;
 use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
@@ -166,9 +167,28 @@ class UserController extends Controller
         return response($response, 200);
     }
 
-    public function clients(){
-        $user = new User();
-        return $user->clients();
+    public function clients(Request $request){
+//        $user = new User();
+//        return $user->clients();
+        $clientsQuery = User::query();
+        $clientsQuery->where('roles.name','=','client')
+            ->join('role_user','role_user.user_id','=','users.id')
+            ->join('roles','roles.id','=','role_user.role_id')
+            ->select('users.id','users.phone','users.name','users.score','users.lock');
+
+        if($request->has('search')){
+            $clientsQuery->where('phone','like','%'.$request->search.'%');
+        }
+
+        if($request->has('sort')){
+            if($request->has('desc'))
+                $clientsQuery->orderByDesc($request->sort);
+            else
+                $clientsQuery->orderBy($request->sort);
+
+        }
+
+        return $clientsQuery ->paginate(10);
     }
 
     public function updateState(Request $request,$id){

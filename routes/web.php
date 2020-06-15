@@ -14,6 +14,7 @@
 use App\ReserveCar;
 use App\Role;
 use App\Schedule;
+use App\Settings;
 use App\Town;
 use App\TownConnection;
 use App\User;
@@ -38,11 +39,16 @@ Route::get('/debug', function (){
 //    $scheduleByScheduleRouteId = $schedule->singleRouteByScheduleRouteId(353);
 //    dd($scheduleByScheduleRouteId);
 
-    $users = User::all();
-    foreach ($users as $user){
-        $user->phone = '+'.preg_replace('/[^0-9]/', '', $user->phone);
-        $user->save();
-    }
+//    $users = User::all();
+//    foreach ($users as $user){
+//        $user->phone = '+'.preg_replace('/[^0-9]/', '', $user->phone);
+//        $user->save();
+//    }
+    $setting = Settings::where('name','=','TIME_BEFORE_MAKE_ORDER')->first();
+    $today_dt = new DateTime();
+    $time = strtotime($today_dt->format("H:i"));
+    $time = date("H:i", strtotime('+'.$setting->value.' minutes', $time));
+    dd($time);
 //    $today_dt = new DateTime();
 //    $time = $today_dt->format("H:i").":00";
 //    $date = $today_dt->format("Y-m-d");

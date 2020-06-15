@@ -6,6 +6,7 @@ use App\Point;
 use App\Town;
 use App\TownConnection;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class TownController extends Controller
@@ -68,8 +69,11 @@ class TownController extends Controller
 
     public function update(Request $request, $id){
         $town = Town::find($id);
+        $town->name = $request->name;
+        $town->save();
 //        $town->name = $request['town'];
 //        $town->save();
+        DB::table('points')->whereIn('id',$request->deleted_points)->delete();
 
         foreach ($request->points as $item){
             $point = null;

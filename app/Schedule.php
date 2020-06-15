@@ -10,12 +10,14 @@ class Schedule extends Model
 {
     public function scheduleShort($townConnectionId,$date){
 
+        $setting = Settings::where('name','=','TIME_BEFORE_MAKE_ORDER')->first();
         $today_dt = new DateTime();
         $expire_dt = new DateTime($date);
 
         $time = "00:00:00";
         if($today_dt->format("Y-m-d") == $expire_dt->format("Y-m-d")) {
-            $time = $today_dt->format("H:i").":00";
+            $time = strtotime($today_dt->format("H:i"));
+            $time = date("H:i", strtotime('+'.$setting->value.' minutes', $time));
 //            $time = "07:00:00";
         }
 

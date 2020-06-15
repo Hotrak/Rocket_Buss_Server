@@ -78,9 +78,10 @@ Route::middleware('auth:api')->group(function () {
     Route::delete('/orders/{id}','OrderController@destroy');
     Route::get('/telegram/{id}/orders','OrderController@telegramUserOrders');
 
-
     Route::get('/reserves/cars','ReserveController@reservesCars');
+    Route::delete('/reserves/{id}/cars','ReserveController@destroyCar');
     Route::get('/reserves/drivers','ReserveController@reservesDrivers');
+    Route::delete('/reserves/{id}/drivers/','ReserveController@destroyDriver');
 
     Route::get('/schedule','ScheduleController@index');
     Route::post('/schedule','ScheduleController@store');

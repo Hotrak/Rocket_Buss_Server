@@ -69,13 +69,13 @@ class User extends Authenticatable
         return $this->hasOne('\App\Driver');
     }
 
-    public function clients(){
+    public function clients($count){
         $clients =  DB::table('users')
             ->join('role_user','role_user.user_id','=','users.id')
             ->join('roles','roles.id','=','role_user.role_id')
             ->where('roles.name','=','client')
-            ->select('users.id','users.phone','users.score','users.lock')
-            ->get();
+            ->select('users.id','users.phone','users.name','users.score','users.lock')
+            ->paginate($count);
 
         return $clients;
     }

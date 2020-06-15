@@ -51,7 +51,7 @@ class ScheduleController extends Controller
 //        dd($counterDrivers);
 
 //        return;
-        for ($i = 9;$i< 30;$i++){
+        for ($i = 14;$i< 30;$i++){
             var_dump($this->storeByData("2020-06-0$i"));
             echo '<br>';
         }
