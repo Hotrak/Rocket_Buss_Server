@@ -15,6 +15,10 @@ class TownConnection extends Model
     public function town2(){
         return $this->hasOne('App\Town', 'id', 'town2_id');
     }
+
+    public function routes(){
+        return $this->hasMany('App\Route', 'town_connection_id', 'id');
+    }
     public static function getByConnGroup($connGroup){
         return TownConnection::where('conn_group','=',$connGroup)
             ->join('towns as town1','town1.id','=','town_connections.town1_id')

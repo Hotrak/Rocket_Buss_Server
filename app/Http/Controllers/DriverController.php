@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Driver;
 use App\Http\Requests\DriverRequest;
+use App\ReserveDriver;
 use App\Role;
+use App\Schedule;
 use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -95,17 +97,33 @@ class DriverController extends Controller
               LEFT JOIN routes ro ON ro.id = sr.route_id
               LEFT JOIN town_connections tc ON tc.id = ro.town_connection_id
               where sch.driver_id=:driverId AND tc.town_x = 1
-  AND tc.town_y = 
-          (SELECT MAX(tc2.town_y) FROM town_connections tc2 WHERE tc.conn_group = tc2.conn_group)
-  AND sch.date_start >= now() 
-              order by sch.date_start, ro.time';
+        AND tc.town_y = (
+              SELECT MAX(tc2.town_y) 
+              FROM town_connections tc2 
+              WHERE tc.conn_group = tc2.conn_group
+              )
+        AND sch.date_start >= now() 
+                  order by sch.date_start, ro.time';
 
         $orders = DB::select($driverOrders,['driverId'=>$driverId]);
         return $orders;
-
     }
-
     public function destroy($id){
+
+        $schedules = Schedule::where("date_start",'>=',now())
+            ->where('driver_id','=',$id)->get();
+
+        $reserveDriver = new ReserveDriver();
+        foreach ($schedules as $item){
+            $reserve = $reserveDriver->getRandomByDate($item->date_start);
+            if(isset($reserve)){
+                $item->driver_id = $reserve->driver_id;
+                $item->save();
+            }
+        }
+
         Driver::find($id)->delete();
     }
+
+
 }

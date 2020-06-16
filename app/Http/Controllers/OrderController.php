@@ -102,17 +102,17 @@ class OrderController extends Controller
 
         $order->count_places = $countPlaces;
 
-//        if($request->order_source == 1 || $request->order_source == 2){
-//
+        if($request->order_source == 1 || $request->order_source == 2){
+
 //            return $order;
-//            $aboutOrder = new Order();
-//            $aboutOrder = $aboutOrder->orderById($order->id);
-//            $aboutOrder = $aboutOrder[0];
-//
-//            $user = new \App\User();
-//            $message = "Rocket Bus $aboutOrder->date_start $request->point_time мест:$aboutOrder->count_places ост:$aboutOrder->point";
-//            $user->sendSms($request->phone,$message);
-//        }
+            $aboutOrder = new Order();
+            $aboutOrder = $aboutOrder->orderById($order->id);
+            $aboutOrder = $aboutOrder[0];
+
+            $user = new \App\User();
+            $message = "Rocket Bus $aboutOrder->date_start $request->point_time мест:$aboutOrder->count_places ост:$aboutOrder->point";
+            $user->sendSms($request->phone,$message);
+        }
 
         $oldInfo = new Order();
         $oldInfo = $oldInfo->orderById($order->id)[0];

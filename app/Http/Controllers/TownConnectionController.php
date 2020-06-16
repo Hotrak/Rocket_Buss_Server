@@ -8,6 +8,7 @@ use App\RouteTowns;
 use App\Town;
 use App\TownConnection;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class TownConnectionController extends Controller
@@ -243,6 +244,14 @@ class TownConnectionController extends Controller
         }
     }
 
-
+    public function show($connGroupId){
+        $townConnections = TownConnection::where('conn_group',$connGroupId)
+            ->where(DB::raw('1'),'=',DB::raw('town_y - town_x'))
+            ->orderBy('town_x')
+            ->with(['routes'])
+            ->get();
+//        dd($townConnections);
+        return $townConnections;
+    }
 
 }

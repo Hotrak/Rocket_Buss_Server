@@ -101,6 +101,8 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/orders/show/{id}','OrderController@show');
 
 });
+Route::get('/routes/{id_conn_group}', 'TownConnectionController@show');
+
 
     Route::get('/statistics','StatisticsController@statistics');
     Route::get('/statistics/menu','StatisticsController@statisticMenu');
