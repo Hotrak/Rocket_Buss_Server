@@ -104,8 +104,10 @@ Route::middleware('auth:api')->group(function () {
 Route::get('/routes/{id_conn_group}', 'TownConnectionController@show');
 
 
-    Route::get('/statistics','StatisticsController@statistics');
-    Route::get('/statistics/menu','StatisticsController@statisticMenu');
+Route::get('/statistics/dayofweek','StatisticsController@statisticsByDayOfWeek');
+Route::get('/statistics/months','StatisticsController@statisticsByMonths');
+
+Route::get('/statistics/menu','StatisticsController@statisticMenu');
 
 Route::post('/orders','OrderController@store');// Не тута
 

@@ -126,7 +126,7 @@ class Order extends Model
         return $orders;
     }
 
-    public function ordersByTownConnGroup($scheduleRouteId){
+    public function ordersByTownConnGroup($scheduleRouteId,$townConnGroup){
         $orders = DB::table('orders')
             ->join('schedule_routes','schedule_routes.id','=','orders.schedule_route_id')
             ->join('schedules','schedules.id','=','schedule_routes.schedule_id')
@@ -159,6 +159,7 @@ class Order extends Model
                 DB::raw('TIME_FORMAT(routes.time , \'%H:%i\') as time')
             )
             ->where("schedules.id","=",$scheduleRouteId)
+            ->where("town_connections.conn_group","=",$townConnGroup)
             ->orderBy('routes.time')
             ->get();
 

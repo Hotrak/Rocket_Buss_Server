@@ -9,12 +9,19 @@ class NewsController extends Controller
 {
     /**
      * Display a listing of the resource.
-     *
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        $news = News::all();
+        $newsQuery = News::query();
+
+        if($request->has('search'))
+            foreach (['title','description'] as $item){
+                $newsQuery->orWhere($item,'like','%'.$request->search.'%');
+            }
+
+        $news = $newsQuery->paginate($request->limit);
         return response()->json(['news'=>$news],200);
     }
 

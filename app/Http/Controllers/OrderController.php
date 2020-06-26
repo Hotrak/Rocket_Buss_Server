@@ -85,14 +85,22 @@ class OrderController extends Controller
 //            $user->score = $user->score + ($price*10);
 //            $user->save();
 //        }
+
+        $price = DB::table('town_connections')
+            ->select('town_connections.price')
+            ->join('routes','routes.town_connection_id','=','town_connections.id')
+            ->join('schedule_routes','schedule_routes.route_id','=','routes.id')
+            ->where('schedule_routes.id','=',$request->schedule_route_id)//schedule_route_id
+            ->first()->price;
+        $request['price'] = $price;
         if($request->user_id == -1){
             $oldUser = \App\User::where('telegram_id','=',$request->telegram_id)->first();
             $request['user_id'] = $oldUser->id;
             $request['phone'] = $oldUser->phone;
         }
-        if($request->point_id == 0){
-            $request['point_id'] = Point::where('town_id','=',$scheduleWithCountPlaces->town1_id)->first()->id;
-        }
+//        if($request->point_id == 0){
+//            $request['point_id'] = Point::where('town_id','=',$scheduleWithCountPlaces->town1_id)->first()->id;
+//        }
         $countPlaces = $request->count_places;
         $order = '';
         for($i=0;$i< $countPlaces;$i++){
@@ -102,7 +110,7 @@ class OrderController extends Controller
 
         $order->count_places = $countPlaces;
 
-        if($request->order_source == 1 || $request->order_source == 2){
+        if($request->order_source == 1 ){
 
 //            return $order;
             $aboutOrder = new Order();
@@ -131,36 +139,36 @@ class OrderController extends Controller
         $order = Order::find($request->id);
         $order->order_status = $request->order_status;
 
-//        if(isset($order->user_id)){
-//
-//            if($request->order_status!=3 && $request->order_status!=4&& $request->order_status!=5){
-//
-//                $price = DB::table('town_connections')
-//                    ->select('town_connections.price')
-//                    ->join('routes','routes.town_connection_id','=','town_connections.id')
-//                    ->join('schedule_routes','schedule_routes.route_id','=','routes.id')
-//                    ->where('schedule_routes.id','=',$request->schedule_route_id)//schedule_route_id
-//                    ->first()->price;
-//
-//                $user = \App\User::find($order->user_id);
-//
-//                if($order->order_status == 6){
-//                    $user->score = $user->score +200;
-//                }else if($order->order_status == 1){
-//                    $user->score = $user->score - ($price*10);
-//                }
-//
-//                if($request->order_status == 6){
-//                    $user->score = $user->score -200;
-//                }else if($request->order_status == 1){
-//                    $user->score = $user->score + ($price*10);
-//                }
-//
-//                $user->save();
-//            }
+        if(isset($order->user_id)){
 
-//        }
-//
+            if($request->order_status!=3 && $request->order_status!=4&& $request->order_status!=5){
+
+                $price = DB::table('town_connections')
+                    ->select('town_connections.price')
+                    ->join('routes','routes.town_connection_id','=','town_connections.id')
+                    ->join('schedule_routes','schedule_routes.route_id','=','routes.id')
+                    ->where('schedule_routes.id','=',$request->schedule_route_id)//schedule_route_id
+                    ->first()->price;
+
+                $user = \App\User::find($order->user_id);
+
+                if($order->order_status == 6){
+                    $user->score = $user->score +200;
+                }else if($order->order_status == 1){
+                    $user->score = $user->score - ($price*10);
+                }
+
+                if($request->order_status == 6){
+                    $user->score = $user->score -200;
+                }else if($request->order_status == 1){
+                    $user->score = $user->score + ($price*10);
+                }
+
+                $user->save();
+            }
+
+        }
+
         $order->save();
 
 
@@ -191,7 +199,7 @@ class OrderController extends Controller
     public function ordersByTownConnGroup($townConnGroup,$scheduleId){
         $orders = new Order();
 
-        $orders = $orders->ordersByTownConnGroup($scheduleId);
+        $orders = $orders->ordersByTownConnGroup($scheduleId,$townConnGroup);
         $townConn = TownConnection::getByConnGroup($townConnGroup);
         $car = Car::where('schedules.id','=',$scheduleId)
             ->join('schedules','schedules.car_id','=','cars.id')

@@ -84,7 +84,7 @@ class User extends Authenticatable
 
         $phone  = preg_replace('/[^0-9]/', '', $phone);
 //        $token = '';//ffb3aefa48dbe35099a14099b403531d
-        $token = 'ffb3aefa48dbe35099a14099b403531d';//9c734836b476fb8f4246d148149cefbd
+        $token = 'a6403fcdc7a60e84427fbb05ce60f98e';//a6403fcdc7a60e84427fbb05ce60f98e
 
         $sms        = new \App\SmsBy($token);
         $res        = $sms->createSMSMessage($message);

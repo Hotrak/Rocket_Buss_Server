@@ -11,6 +11,7 @@
 |
 */
 
+use App\Order;
 use App\ReserveCar;
 use App\Role;
 use App\Schedule;
@@ -44,11 +45,24 @@ Route::get('/debug', function (){
 //        $user->phone = '+'.preg_replace('/[^0-9]/', '', $user->phone);
 //        $user->save();
 //    }
-    $setting = Settings::where('name','=','TIME_BEFORE_MAKE_ORDER')->first();
-    $today_dt = new DateTime();
-    $time = strtotime($today_dt->format("H:i"));
-    $time = date("H:i", strtotime('+'.$setting->value.' minutes', $time));
-    dd($time);
+//    $setting = Settings::where('name','=','TIME_BEFORE_MAKE_ORDER')->first();
+//    $today_dt = new DateTime();
+//    $time = strtotime($today_dt->format("H:i"));
+//    $time = date("H:i", strtotime('+'.$setting->value.' minutes', $time));
+//    dd($time);
+    $orders =  Order::all();
+    foreach ($orders as $item ){
+        $price = DB::table('town_connections')
+            ->select('town_connections.price')
+            ->join('routes','routes.town_connection_id','=','town_connections.id')
+            ->join('schedule_routes','schedule_routes.route_id','=','routes.id')
+            ->where('schedule_routes.id','=',$item->schedule_route_id)//schedule_route_id
+            ->first()->price;
+
+        $item->price = $price;
+        $item->save();
+    }
+
 //    $today_dt = new DateTime();
 //    $time = $today_dt->format("H:i").":00";
 //    $date = $today_dt->format("Y-m-d");

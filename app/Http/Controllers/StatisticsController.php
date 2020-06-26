@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Order;
+use App\Schedule;
 use App\Settings;
 use App\TownConnection;
 use Illuminate\Http\Request;
@@ -9,98 +11,190 @@ use Illuminate\Support\Facades\DB;
 
 class StatisticsController extends Controller
 {
-    public function statistics(Request $request){
-        $where = '';
-        if(isset($request->dateStart))
-            $where =" and schedules.date_start BETWEEN '$request->dateStart' and '$request->dateEnd' ";
+    public function statisticsByDayOfWeek(Request $request){
+        $statisticsQuery = Order::query();
+        if($request->has('dateStart'))
+            $statisticsQuery->whereBetween('schedules.date_start',[$request->dateStart,$request->dateEnd]);
 
-        $statistics =  DB::select('SELECT CONCAT(town1.name,\'-\',town2.name) AS full_name,
-            town_connections.id,
-          town1.name AS town1_name,
-          town2.name AS town2_name,
-          SUM(orders.count_places) AS count_places,
-          town_connections.price,
-          town_connections.town_x,
-          town_connections.town_y,
-          
-          schedules.date_start,
-          DAYOFWEEK(schedules.date_start) AS date_start_of_w,
-        
-          MONTH(schedules.date_start) AS date_start_m
-        
-          FROM town_connections 
-          
-          
-          JOIN towns AS town1 ON town1.id = town_connections.town1_id
-          JOIN towns AS town2 ON town2.id = town_connections.town2_id
-          JOIN routes ON routes.town_connection_id = town_connections.id
-          JOIN schedule_routes ON schedule_routes.route_id = routes.id
-          JOIN schedules ON schedules.id = schedule_routes.schedule_id
-          JOIN orders ON orders.schedule_route_id = schedule_routes.id
-        
-          WHERE town_connections.id <> -1 '.$where.' and town_connections.town_x =1 and 
-          town_connections.town_y = (select max(town_conn2.town_y) 
-          from town_connections as town_conn2 where town_conn2.conn_group = town_connections.conn_group)
-        
-          GROUP BY
-          town_connections.id, 
-          town1.name,
-          town2.name, 
-          town_connections.price,
-          schedules.date_start,
-          date_start_of_w,
-      
-          full_name,
-          date_start_m
-          
-          ORDER BY town_connections.id
-          ');
+        $statisticsQuery->select(
+            DB::raw('SUM(orders.count_places) AS full_count_places'),
+            DB::raw('SUM(orders.count_places * town_connections.price) AS price'),
+            DB::raw('DAYOFWEEK(schedules.date_start) AS date_start_of_w'),
+            DB::raw('
+                (
+                SELECT  CONCAT(town1.name,\'-\',town2.name) AS full_name
+                FROM town_connections AS town_conn2
+                JOIN towns AS town1 ON town1.id = town_conn2.town1_id
+                JOIN towns AS town2 ON town2.id = town_conn2.town2_id
+                WHERE town_connections.conn_group = town_conn2.conn_group
+                AND town_conn2.town_x = 1 AND town_conn2.town_y =  
+                    (
+                    SELECT max(town_conn3.town_y)
+                    FROM town_connections as town_conn3 
+                    WHERE town_conn3.conn_group = town_conn2.conn_group
+                    )
+                ) AS full_name 
+             '),
+            DB::raw('
+                (
+                SELECT max(town_conn2.town_y)
+                FROM town_connections as town_conn2
+                WHERE town_conn2.conn_group = town_connections.conn_group
+                ) AS town_y  
+            '),
+            DB::raw('
+                (
+                SELECT  town_conn2.id 
+                FROM town_connections AS town_conn2
+                WHERE town_connections.conn_group = town_conn2.conn_group
+                AND town_conn2.town_x = 1 AND town_conn2.town_y =  
+                    (
+                    SELECT max(town_conn3.town_y)
+                    FROM town_connections as town_conn3 
+                    WHERE town_conn3.conn_group = town_conn2.conn_group
+                    )
+                ) AS town_conn_id
+            '),
+            'town_connections.conn_group')
+            ->join('schedule_routes','schedule_routes.id','=','orders.schedule_route_id')
+            ->join('routes','routes.id','=','schedule_routes.route_id')
+            ->join('schedules','schedules.id','=','schedule_routes.schedule_id')
+            ->join('town_connections','town_connections.id','=','routes.town_connection_id')
+            ->groupBy(
+                'town_connections.conn_group',
+                'date_start_of_w'
+            )
+            ->orderBy('town_conn_id');
 
-//        $statisticsQuery = TownConnection::query();
-
-//        if($request->has('dateStart')|| $request->has('dateEnd'))
-//            $statisticsQuery->whereBetween('schedules.date_start',$request->dateStart,$request->dateEnd);
-//
-//        $statisticsQuery->
-
-        $dates = DB::select('SELECT MAX(date_start) as max_date , MIN(date_start) as min_date from schedules');
-//        dd($dates[0]->max_date);
-
-        return ['data'=>$statistics,'max_date'=>$dates[0]->max_date,'min_date'=>$dates[0]->min_date];
+        $statistics = $statisticsQuery->get();
+//        dd($statistics);
+        $dates = Schedule::select(
+            DB::raw(' MAX(date_start) as max_date'),
+            DB::raw('MIN(date_start) as min_date')
+        )->first();
+//        $dates = DB::selectOne('SELECT MAX(date_start) as max_date , MIN(date_start) as min_date from schedules');
+        return ['data'=>$statistics,'max_date'=>$dates->max_date,'min_date'=>$dates->min_date];
     }
 
-    public function statisticMenu(){
-        $statistic = DB::select('SELECT town_connections.id,
-            CONCAT(town1.name,\'-\',town2.name) AS full_name,
-                town_connections.town_x,
-          town_connections.town_y,
-          
-          SUM(orders.count_places) AS count_places,
-          town_connections.price
-        
-          FROM town_connections 
-         
-          JOIN towns AS town1 ON town1.id = town_connections.town1_id
-          JOIN towns AS town2 ON town2.id = town_connections.town2_id
-          JOIN routes ON routes.town_connection_id = town_connections.id
-          JOIN schedule_routes ON schedule_routes.route_id = routes.id
-          JOIN schedules ON schedules.id = schedule_routes.schedule_id
-          LEFT JOIN orders ON orders.schedule_route_id = schedule_routes.id
-        
-            
-            AND YEAR(schedules.date_start) = YEAR(NOW())
-              GROUP BY
-              town_connections.id, 
-              town1.name,
-              town2.name, 
-              town_connections.price,
-                  town_connections.town_x,
-          town_connections.town_y,
-             
-              full_name
-            
-              ORDER BY town_connections.id');
+    public function statisticsByMonths(Request $request){
+        $statisticsQuery = Order::query();
 
+        if($request->has('dateStart'))
+            $statisticsQuery->whereBetween('schedules.date_start',array($request->dateStart,$request->dateEnd));
+        $statisticsQuery->select(
+            DB::raw('SUM(orders.count_places) AS full_count_places'),
+            DB::raw('SUM(orders.count_places * town_connections.price) AS price'),
+            DB::raw('MONTH(schedules.date_start) AS date_start_m'),
+            DB::raw('
+                (
+                SELECT  CONCAT(town1.name,\'-\',town2.name) AS full_name
+                FROM town_connections AS town_conn2
+                JOIN towns AS town1 ON town1.id = town_conn2.town1_id
+                JOIN towns AS town2 ON town2.id = town_conn2.town2_id
+                WHERE town_connections.conn_group = town_conn2.conn_group
+                AND town_conn2.town_x = 1 AND town_conn2.town_y =  
+                    (
+                    SELECT max(town_conn3.town_y)
+                    FROM town_connections as town_conn3 
+                    WHERE town_conn3.conn_group = town_conn2.conn_group
+                    )
+                ) AS full_name 
+             '),
+            DB::raw('
+                (
+                SELECT max(town_conn2.town_y)
+                FROM town_connections as town_conn2
+                WHERE town_conn2.conn_group = town_connections.conn_group
+                ) AS town_y  
+            '),
+            DB::raw('
+                (
+                SELECT  town_conn2.id 
+                FROM town_connections AS town_conn2
+                WHERE town_connections.conn_group = town_conn2.conn_group
+                AND town_conn2.town_x = 1 AND town_conn2.town_y =  
+                    (
+                    SELECT max(town_conn3.town_y)
+                    FROM town_connections as town_conn3 
+                    WHERE town_conn3.conn_group = town_conn2.conn_group
+                    )
+                ) AS town_conn_id
+            '),
+            'town_connections.conn_group')
+            ->join('schedule_routes','schedule_routes.id','=','orders.schedule_route_id')
+            ->join('routes','routes.id','=','schedule_routes.route_id')
+            ->join('schedules','schedules.id','=','schedule_routes.schedule_id')
+            ->join('town_connections','town_connections.id','=','routes.town_connection_id')
+            ->groupBy(
+                'town_connections.conn_group',
+                'date_start_m'
+            )
+            ->orderBy('town_conn_id');
+
+        $statistics = $statisticsQuery->get();
+//        dd($statistics);
+        $dates = Schedule::select(
+            DB::raw(' MAX(date_start) as max_date'),
+            DB::raw('MIN(date_start) as min_date')
+        )->first();
+//        $dates = DB::selectOne('SELECT MAX(date_start) as max_date , MIN(date_start) as min_date from schedules');
+        return ['data'=>$statistics,'max_date'=>$dates->max_date,'min_date'=>$dates->min_date];
+    }
+
+    public function statisticMenu(Request $request){
+        $statisticsQuery = Order::query();
+        $statisticsQuery->select(
+            DB::raw('SUM(orders.count_places) AS full_count_places'),
+            DB::raw('SUM(orders.count_places * town_connections.price) AS price'),
+            DB::raw('
+                (
+                SELECT  CONCAT(town1.name,\'-\',town2.name) AS full_name
+                FROM town_connections AS town_conn2
+                JOIN towns AS town1 ON town1.id = town_conn2.town1_id
+                JOIN towns AS town2 ON town2.id = town_conn2.town2_id
+                WHERE town_connections.conn_group = town_conn2.conn_group
+                AND town_conn2.town_x = 1 AND town_conn2.town_y =  
+                    (
+                    SELECT max(town_conn3.town_y)
+                    FROM town_connections as town_conn3 
+                    WHERE town_conn3.conn_group = town_conn2.conn_group
+                    )
+                ) AS full_name 
+             '),
+            DB::raw('
+                (
+                SELECT max(town_conn2.town_y)
+                FROM town_connections as town_conn2
+                WHERE town_conn2.conn_group = town_connections.conn_group
+                ) AS town_y  
+            '),
+            DB::raw('
+                (
+                SELECT  town_conn2.id 
+                FROM town_connections AS town_conn2
+                WHERE town_connections.conn_group = town_conn2.conn_group
+                AND town_conn2.town_x = 1 AND town_conn2.town_y =  
+                    (
+                    SELECT max(town_conn3.town_y)
+                    FROM town_connections as town_conn3 
+                    WHERE town_conn3.conn_group = town_conn2.conn_group
+                    )
+                ) AS town_conn_id
+            '),
+            'town_connections.conn_group')
+            ->join('schedule_routes','schedule_routes.id','=','orders.schedule_route_id')
+            ->join('routes','routes.id','=','schedule_routes.route_id')
+            ->join('schedules','schedules.id','=','schedule_routes.schedule_id')
+            ->rightJoin('town_connections','town_connections.id','=','routes.town_connection_id')
+            ->groupBy(
+                'town_connections.conn_group'
+            )
+            ->orderBy('town_conn_id');
+
+
+//        $statisticsQuery->whereDate('schedules.date_start','<=',date('Y-m-d', strtotime(now(). " - 30 day")));
+        $statisticsNow = $statisticsQuery->get();
+//        dd($statisticsNow);
         $workTime =  DB::select('SELECT  SUM(tc1.time_drive) AS time_drive,route_days.weekday FROM routes 
           JOIN town_connections tc1 ON tc1.id = routes.town_connection_id
           JOIN route_days ON route_days.route_days_group = routes.route_days_group
@@ -121,7 +215,7 @@ class StatisticsController extends Controller
 
         $sum = $sum+$reserveDriversCount->value;
 
-        return ['statistic'=>$statistic,'work_state'=>$sum];
+        return ['statistic'=>$statisticsNow,'work_state'=>$sum];
     }
 }
 
